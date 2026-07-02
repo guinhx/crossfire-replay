@@ -1,0 +1,41 @@
+CrossFire Replay Toolkit License
+Version 1.0, July 2026
+
+Copyright (c) 2026 CrossFire Replay Toolkit contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+1. The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+
+2. ATTRIBUTION (mandatory, non-negotiable). You must preserve and keep visible
+   the project credits in every distribution, fork, derivative work, or
+   product that incorporates this Software or a substantial portion of it.
+   This includes, at minimum:
+   - Retaining LICENSE and CREDITS.md (or equivalent content) in source
+     distributions;
+   - Displaying clear, human-readable attribution in binary distributions,
+     applications, services, and user-facing documentation (for example in
+     an "About", "Credits", "Acknowledgements", or equivalent section);
+   - Not removing, hiding, minimizing, obfuscating, or misrepresenting these
+     credits.
+
+3. NO IMPLIED ENDORSEMENT. This Software is an independent reverse-engineering
+   and interoperability effort. You may not state or imply that this project
+   is official, sponsored, or endorsed by Smilegate, the CrossFire publishers,
+   or any game rights holder.
+
+4. DISCLAIMER. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+   EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+   DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+   OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+   USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+See CREDITS.md for methodology, contributors, and third-party acknowledgements.

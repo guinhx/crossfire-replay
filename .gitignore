@@ -1,0 +1,18 @@
+# Build
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Maintainer-local probes and scripts (not distributed)
+tools/
+
+# Local RE / client artifacts — never commit
+references/
+*.dll
+*.pdb
+
+# OS
+Thumbs.db
+.DS_Store
