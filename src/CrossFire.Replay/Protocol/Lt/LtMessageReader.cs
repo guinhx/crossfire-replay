@@ -78,6 +78,9 @@ public static class LtMessageReader
         EMessageId.MsgCsRappelVelAndRot => 128,
         EMessageId.MsgCsWireC4Defuse => 128,
         EMessageId.MsgScAiCraterRenewalEnergyBallDestroy => 256,
+        EMessageId.MsgScActObjectDestroy => 64,
+        EMessageId.MsgScLadderArea => 48,
+        EMessageId.MsgCsReqDropWeapon => 64,
         _ => int.MaxValue,
     };
 

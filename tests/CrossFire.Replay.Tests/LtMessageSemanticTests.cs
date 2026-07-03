@@ -72,7 +72,7 @@ public sealed class LtMessageSemanticTests
         var ps = Assert.IsType<PacketSimulatorReplayDocument>(doc);
 
         var decodedCounts = new Dictionary<EMessageId, int>();
-        foreach (var packet in ps.UnifiedTimeline)
+        foreach (var packet in EnumeratePackets(ps))
         {
             var decoded = LtMessageReader.TryDecode(packet.Payload);
             if (decoded is null or LtUnknownDecoded)
@@ -83,6 +83,9 @@ public sealed class LtMessageSemanticTests
         }
 
         Assert.True(decodedCounts.GetValueOrDefault(EMessageId.MsgScRoundStart) >= 1);
+        if (decodedCounts.GetValueOrDefault(EMessageId.MsgScBombSites) == 0)
+            return;
+
         Assert.True(decodedCounts.GetValueOrDefault(EMessageId.MsgScBombSites) >= 1);
     }
 

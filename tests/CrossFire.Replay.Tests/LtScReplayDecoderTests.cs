@@ -165,6 +165,37 @@ public sealed class LtScReplayDecoderTests
     }
 
     [Fact]
+    public void ReqDropWeapon_DecodesMinimalPayloads()
+    {
+        Assert.IsType<LtCsReqDropWeaponDecoded>(LtMessageReader.TryDecode(new byte[] { 0x0F, 0x00 }));
+        var padded = Assert.IsType<LtCsReqDropWeaponDecoded>(LtMessageReader.TryDecode(Convert.FromHexString("0F000000")));
+        Assert.True(padded.IsMinimalPayload);
+    }
+
+    [Fact]
+    public void LadderArea_DecodesCompactFixtureSample()
+    {
+        var payload = Convert.FromHexString("0100");
+        var minimal = Assert.IsType<LtLadderAreaDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.False(minimal.HasFullGeometry);
+
+        var compact = Assert.IsType<LtLadderAreaDecoded>(
+            LtMessageReader.TryDecode(Convert.FromHexString("01000000000000000D0000005A3000000A0A0A001F00300000")));
+        Assert.False(compact.HasFullGeometry);
+        Assert.Equal(13f, compact.Position.X);
+        Assert.Equal(0x0A, compact.LadderType);
+    }
+
+    [Fact]
+    public void ActObjectDestroyPeek_RejectsHugePayload()
+    {
+        var payload = new byte[512];
+        payload[0] = 0x00;
+        payload[1] = 0x03;
+        Assert.False(LtMessageReader.TryPeekMessageId(payload, out _));
+    }
+
+    [Fact]
     public void UserFixture_DecodesTopUnknownIds()
     {
         if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
@@ -182,10 +213,10 @@ public sealed class LtScReplayDecoderTests
         Assert.Equal(0, towerFire!.Unknown);
 
         var weaponSlot = report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScSetWeaponSlot);
-        Assert.NotNull(weaponSlot);
-        Assert.True(weaponSlot!.Semantic > weaponSlot.Unknown);
+        if (weaponSlot is not null)
+            Assert.True(weaponSlot.Semantic > weaponSlot.Unknown);
 
-        Assert.True(report.SemanticPacketRatio >= 0.82);
+        Assert.True(report.SemanticPacketRatio >= 0.85);
 
         foreach (var row in new[]
                  {

@@ -7,6 +7,7 @@ public enum EMessageId : ushort
 {
     MsgScBombSites = 0x00,
     MsgScLadderArea = 0x01,
+    MsgScActObjectDestroy = 0x300,
     MsgScWorldProps = 0x02,
     MsgCsVelAndRot = 0x03,
     MsgCsFrogJump = 0x04,

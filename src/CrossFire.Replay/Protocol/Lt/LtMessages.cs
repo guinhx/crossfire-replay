@@ -171,7 +171,8 @@ public sealed record LtLadderAreaDecoded(
     Vector3F Position,
     Vector3F Rotation,
     Vector3F Dimensions,
-    byte LadderType) : LtDecodedMessage(EMessageId.MsgScLadderArea);
+    byte LadderType,
+    bool HasFullGeometry = true) : LtDecodedMessage(EMessageId.MsgScLadderArea);
 
 public sealed record LtPlayerRespawnDecoded(
     byte CharacterIndex,
@@ -247,7 +248,8 @@ public sealed record LtCsReqDropWeaponDecoded(
     LtCsPacketHeaderFields Header,
     byte Slot,
     ushort AmmoLeftInMagazine,
-    ushort AmmoLeftInTotal) : LtDecodedMessage(EMessageId.MsgCsReqDropWeapon);
+    ushort AmmoLeftInTotal,
+    bool IsMinimalPayload = false) : LtDecodedMessage(EMessageId.MsgCsReqDropWeapon);
 
 public sealed record LtCsChangeWeaponDecoded(
     EMessageId WireMessageId,

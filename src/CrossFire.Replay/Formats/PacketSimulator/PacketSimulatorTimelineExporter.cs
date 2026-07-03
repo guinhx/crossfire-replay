@@ -178,6 +178,7 @@ public static class PacketSimulatorTimelineExporter
                 ["slot"] = drop.Slot,
                 ["ammoMag"] = drop.AmmoLeftInMagazine,
                 ["ammoTotal"] = drop.AmmoLeftInTotal,
+                ["isMinimal"] = drop.IsMinimalPayload,
             },
             LtCsChangeWeaponDecoded change => new()
             {

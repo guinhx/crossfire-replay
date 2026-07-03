@@ -56,10 +56,27 @@ internal static class LtCsSemanticDecoders
 
   public static LtDecodedMessage? TryDecodeReqDropWeapon(ReadOnlySpan<byte> payload)
   {
+    if (payload.Length < 2)
+      return null;
+
     try
     {
       var reader = new LtBitstreamReader(payload);
       if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgCsReqDropWeapon)
+        return null;
+
+      if (!reader.HasRemaining)
+        return new LtCsReqDropWeaponDecoded(new LtCsPacketHeaderFields(0, 0), 0, 0, 0, true);
+
+      if (payload.Length <= 6)
+      {
+        if (reader.RemainingBits >= 32)
+          _ = reader.ReadUInt32();
+
+        return new LtCsReqDropWeaponDecoded(new LtCsPacketHeaderFields(0, 0), 0, 0, 0, true);
+      }
+
+      if (payload.Length > 64)
         return null;
 
       var header = ReadHeaderFields(reader);

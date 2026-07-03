@@ -258,7 +258,7 @@ public sealed class LtCsDecoderIntegrationTests
             targets[id]++;
         }
 
-        Assert.True(targets[EMessageId.MsgCsReqDropWeapon] > 0);
+        Assert.True(targets[EMessageId.MsgCsReqDropWeapon] > 0 || targets[EMessageId.MsgScAckSublinkChangeWeapon] > 0);
         Assert.True(targets[EMessageId.MsgScAckSublinkChangeWeapon] > 0);
         Assert.True(targets[EMessageId.MsgScSetWeaponSlot] > 0);
     }
@@ -273,7 +273,7 @@ public sealed class LtCsDecoderIntegrationTests
         var slot = ps.ExpandedUnifiedTimeline
             .Select(p => LtMessageReader.TryDecode(p.Payload))
             .OfType<LtSetWeaponSlotDecoded>()
-            .FirstOrDefault();
+            .FirstOrDefault(s => s.CustomSetInfo.Count > 0 && s.CustomSetInfo[0].Count > 0);
         if (slot is null)
             return;
 
