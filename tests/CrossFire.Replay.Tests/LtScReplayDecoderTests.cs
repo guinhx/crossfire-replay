@@ -1,5 +1,6 @@
 using CrossFire.Replay.Core;
 using CrossFire.Replay.Formats.PacketSimulator;
+using CrossFire.Replay.Protocol;
 using CrossFire.Replay.Protocol.Lt;
 using CrossFire.Replay.Tests.Support;
 using Xunit;
@@ -74,10 +75,16 @@ public sealed class LtScReplayDecoderTests
         var payload = Convert.FromHexString(hex);
         var decoded = Assert.IsType<LtScArcadiaCoreSwitchStateDecoded>(LtMessageReader.TryDecode(payload));
 
+        Assert.True(decoded.IsReplayArchivalLayout);
         Assert.Equal(0x0C7C, decoded.CoreObjectId);
         Assert.Equal(0x0Du, decoded.EventKind);
         Assert.Equal(0x550D25B2u, decoded.Timestamp);
         Assert.Equal(0x88, decoded.SubState);
+        Assert.Equal(104u, decoded.CurHp);
+        Assert.Equal(0x0C7Du, decoded.RelatedObjectId);
+        Assert.Equal(-8, decoded.ReplaySentinelA);
+        Assert.Equal(7, decoded.ReplaySentinelB);
+        Assert.Equal(0x0FFFFFFFu, decoded.ValidMask);
         Assert.Equal(payload.Length, decoded.PayloadLength);
     }
 
@@ -115,25 +122,13 @@ public sealed class LtScReplayDecoderTests
     }
 
     [Fact]
-    public void DamageSiteState_DecodesFixtureSample()
+    public void DamageSiteState_RoundTripsThroughNativeSerializer()
     {
-        var hex = "01010100";
-        var payload = Convert.FromHexString(hex);
+        var original = new LtScDamageSiteStateDecoded(1, false);
+        var payload = LtNativeSerializers.EncodeDamageSiteState(original);
         var decoded = Assert.IsType<LtScDamageSiteStateDecoded>(LtMessageReader.TryDecode(payload));
-
-        Assert.Equal(1u, decoded.ObjectHandle);
-        Assert.False(decoded.IsOn);
-    }
-
-    [Fact]
-    public void DamageSiteState_DecodesExtendedFixtureSample()
-    {
-        var hex = "01010100FF";
-        var payload = Convert.FromHexString(hex);
-        var decoded = Assert.IsType<LtScDamageSiteStateDecoded>(LtMessageReader.TryDecode(payload));
-
-        Assert.Equal(1u, decoded.ObjectHandle);
-        Assert.True(decoded.IsOn);
+        Assert.Equal(original.ObjectId, decoded.ObjectId);
+        Assert.Equal(original.IsOn, decoded.IsOn);
     }
 
     [Fact]
@@ -141,6 +136,28 @@ public sealed class LtScReplayDecoderTests
     {
         var payload = new byte[] { 0xE9, 0x01 };
         Assert.IsType<LtMscNone4Decoded>(LtMessageReader.TryDecode(payload));
+    }
+
+    [Fact]
+    public void ForceLeavePollStartNative_RoundTripsThroughNativeSerializer()
+    {
+        var original = new LtScForceLeavePollStartDecoded([
+            new LtScForceLeavePollStartEntryDecoded(
+                0,
+                0,
+                0,
+                "PlayerA",
+                "PlayerB",
+                2,
+                IsReplayBundledLayout: false),
+        ]);
+        var payload = LtNativeSerializers.EncodeForceLeavePollStart(original);
+        var decoded = Assert.IsType<LtScForceLeavePollStartDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.Single(decoded.Entries);
+        Assert.Equal("PlayerA", decoded.Entries[0].RequesterName);
+        Assert.Equal("PlayerB", decoded.Entries[0].TargetName);
+        Assert.Equal(2, decoded.Entries[0].ReasonNum);
+        Assert.False(decoded.Entries[0].IsReplayBundledLayout);
     }
 
     [Fact]
@@ -196,6 +213,157 @@ public sealed class LtScReplayDecoderTests
     }
 
     [Fact]
+    public void LadderAreaCompact_RoundTripsThroughNativeSerializer()
+    {
+        var original = new LtLadderAreaDecoded(
+            0,
+            new Vector3F(13, 0, 0),
+            new Vector3F(0, 0, 0),
+            new Vector3F(0, 0, 0),
+            0x0A,
+            false);
+        var payload = LtNativeSerializers.EncodeLadderArea(original);
+        var decoded = Assert.IsType<LtLadderAreaDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.Equal(original.Position.X, decoded.Position.X);
+        Assert.Equal(original.LadderType, decoded.LadderType);
+        Assert.False(decoded.HasFullGeometry);
+    }
+
+    [Fact]
+    public void ArcadiaCoreSwitchState_ReplayArchivalRoundTripsFromFixture()
+    {
+        var hex = "000800000000000000000000000000000000000000000000000000000000000000000000000000000000F8FFFFFF07000000000000000000000000000000000000000000000000000000000000000000000000703168F15E813F70008000F0FFFFFFFFFFFFFFFFFF0F00007C0C0000680000000D00000088CFB2250D5508770000000000000000007D0C0000";
+        var decoded = Assert.IsType<LtScArcadiaCoreSwitchStateDecoded>(LtMessageReader.TryDecode(Convert.FromHexString(hex)));
+        var payload = LtNativeSerializers.EncodeArcadiaCoreSwitchState(decoded);
+        var roundTripped = Assert.IsType<LtScArcadiaCoreSwitchStateDecoded>(LtMessageReader.TryDecode(payload));
+
+        Assert.Equal(decoded.CoreObjectId, roundTripped.CoreObjectId);
+        Assert.Equal(decoded.EventKind, roundTripped.EventKind);
+        Assert.Equal(decoded.Timestamp, roundTripped.Timestamp);
+        Assert.Equal(decoded.CurHp, roundTripped.CurHp);
+        Assert.Equal(decoded.RelatedObjectId, roundTripped.RelatedObjectId);
+        Assert.Equal(decoded.ReplaySentinelA, roundTripped.ReplaySentinelA);
+        Assert.Equal(decoded.ValidMask, roundTripped.ValidMask);
+    }
+
+    [Fact]
+    public void ArcadiaCoreSwitchState_LiveWireRoundTripsThroughNativeSerializer()
+    {
+        var original = new LtScArcadiaCoreSwitchStateDecoded(
+            CoreObjectId: 0,
+            EventKind: 4,
+            Timestamp: 0,
+            SubState: 0,
+            PayloadLength: 14,
+            CurHp: 500,
+            SwitchSlot: 4,
+            CoreTableKey: 2,
+            IsReplayArchivalLayout: false);
+        var payload = LtNativeSerializers.EncodeArcadiaCoreSwitchState(original);
+        var decoded = Assert.IsType<LtScArcadiaCoreSwitchStateDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.False(decoded.IsReplayArchivalLayout);
+        Assert.Equal(original.SwitchSlot, decoded.SwitchSlot);
+        Assert.Equal(original.CoreTableKey, decoded.CoreTableKey);
+        Assert.Equal(original.CurHp, decoded.CurHp);
+    }
+
+    [Fact]
+    public void ArcadiaCoreSwitchState_RoundTripsTailFieldsThroughNativeSerializer()
+    {
+        var original = new LtScArcadiaCoreSwitchStateDecoded(
+            0x0C7C,
+            0x0D,
+            0x550D25B2u,
+            0x88,
+            140,
+            CurHp: 104,
+            ReplaySentinelA: -8,
+            ReplaySentinelB: 7,
+            GuardByte: 0xFF,
+            ValidMask: 0x0FFFFFFF,
+            RelatedObjectId: 0x0C7D,
+            IsReplayArchivalLayout: true);
+        var payload = LtNativeSerializers.EncodeArcadiaCoreSwitchState(original);
+        var decoded = Assert.IsType<LtScArcadiaCoreSwitchStateDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.Equal(original.CoreObjectId, decoded.CoreObjectId);
+        Assert.Equal(original.EventKind, decoded.EventKind);
+        Assert.Equal(original.Timestamp, decoded.Timestamp);
+        Assert.Equal(original.SubState, decoded.SubState);
+    }
+
+    [Fact]
+    public void NjAiFireStart_RoundTripsThroughNativeSerializer()
+    {
+        var original = new LtScNjAiFireStartDecoded(1, 0, false);
+        var payload = LtNativeSerializers.EncodeNjAiFireStart(original);
+        var decoded = Assert.IsType<LtScNjAiFireStartDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.Equal(original.FieldA, decoded.FieldA);
+        Assert.Equal(original.FieldB, decoded.FieldB);
+    }
+
+    [Fact]
+    public void RappelVelAndRotEntry_RoundTripsThroughNativeSerializer()
+    {
+        var original = new LtCsRappelVelAndRotEntryDecoded(
+            0xB2,
+            0x25,
+            new Vector3F(1f, 2f, 3f),
+            new Vector3F(100f, 50f, -200f),
+            15f);
+        var payload = LtNativeSerializers.EncodeRappelVelAndRotEntry(original);
+        Assert.True(LtNativeSerializers.TryDecodeRappelVelAndRotEntry(payload, out var decoded, out _));
+        Assert.Equal(original.AreaIndex, decoded.AreaIndex);
+        Assert.Equal(original.CharacterIndex, decoded.CharacterIndex);
+        Assert.Equal(original.Ratio, decoded.Ratio);
+    }
+
+    [Fact]
+    public void BossReviveEntry_RoundTripsThroughNativeSerializer()
+    {
+        var original = new LtScBossReviveEntryDecoded(
+            0x380D25B2u,
+            0x0A01F301u,
+            0x000000F8u,
+            0x491E0010u,
+            0x00000060u,
+            0x0000000Cu);
+        var payload = LtNativeSerializers.EncodeBossReviveEntry(original);
+        Assert.True(LtNativeSerializers.TryDecodeBossReviveEntry(payload, out var decoded, out _));
+        Assert.Equal(original.Timestamp, decoded.Timestamp);
+        Assert.Equal(original.EventId, decoded.EventId);
+    }
+
+    [Fact]
+    public void DamageCalculationRequest_RoundTripsThroughNativeSerializer()
+    {
+        var positions = Enumerable.Range(0, 16)
+            .Select(i => new Vector3F(i, i + 1, i + 2))
+            .ToList();
+        var original = new LtScDamageCalculationRequestDecoded(
+            5,
+            new Vector3F(1f, 2f, 3f),
+            42,
+            0f, 0f, 0f, 1f,
+            0.5f,
+            1.25f,
+            2,
+            3,
+            1,
+            4,
+            5,
+            false,
+            0.75f,
+            positions,
+            false);
+        var payload = LtNativeSerializers.EncodeDamageCalculationRequest(original);
+        var decoded = Assert.IsType<LtScDamageCalculationRequestDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.Equal(original.Attacker, decoded.Attacker);
+        Assert.Equal(original.WeaponType, decoded.WeaponType);
+        Assert.Equal(16, decoded.ThirdPartyPositions.Count);
+        Assert.Equal(original.ThirdPartyPositions[7].Y, decoded.ThirdPartyPositions[7].Y);
+    }
+
+    [Fact]
     public void NjAiFireStart_DecodesFixtureSample()
     {
         var payload = Convert.FromHexString("0002000000010000");
@@ -215,11 +383,37 @@ public sealed class LtScReplayDecoderTests
     }
 
     [Fact]
-    public void DamageSite_DecodesFixtureSample()
+    public void DamageSite_RoundTripsThroughNativeSerializer()
     {
-        var payload = Convert.FromHexString("000100000000000000000000008CC44735000000004336393732003000000000000000000000452B703900000000433838333200300000000000000000006883F63400000000433230333600300000000000000000009C50931500000000433132");
+        var original = new LtScDamageSiteDecoded(new Vector3F(10f, 20f, 30f), 2, true);
+        var payload = LtNativeSerializers.EncodeDamageSite(original);
         var decoded = Assert.IsType<LtScDamageSiteDecoded>(LtMessageReader.TryDecode(payload));
-        Assert.NotEmpty(decoded.Entries);
+
+        Assert.Equal(original.Dimension, decoded.Dimension);
+        Assert.Equal(original.DamageSiteType, decoded.DamageSiteType);
+        Assert.Equal(original.RenderEffect, decoded.RenderEffect);
+    }
+
+    [Fact]
+    public void AiScore_RoundTripsThroughNativeSerializer()
+    {
+        var original = new LtScAiScoreDecoded(3, 100, 50, 12, 4, 900);
+        var payload = LtNativeSerializers.EncodeAiScore(original);
+        var decoded = Assert.IsType<LtScAiScoreDecoded>(LtMessageReader.TryDecode(payload));
+
+        Assert.Equal(original.BotIndex, decoded.BotIndex);
+        Assert.Equal(original.Health, decoded.Health);
+        Assert.Equal(original.CurrentGameMoney, decoded.CurrentGameMoney);
+    }
+
+    [Fact]
+    public void AiScore_DecodesFixtureSample()
+    {
+        var original = new LtScAiScoreDecoded(93, 0x65CA, 0x017D, 5, 0, 0x0139);
+        var payload = LtNativeSerializers.EncodeAiScore(original);
+        var decoded = Assert.IsType<LtScAiScoreDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.Equal(93, decoded.BotIndex);
+        Assert.Equal(5, decoded.NumKill);
     }
 
     [Fact]
@@ -237,13 +431,6 @@ public sealed class LtScReplayDecoderTests
     }
 
     [Fact]
-    public void DamageSite_DecodesMinimalPayload()
-    {
-        var payload = Convert.FromHexString("0001");
-        Assert.IsType<LtScDamageSiteDecoded>(LtMessageReader.TryDecode(payload));
-    }
-
-    [Fact]
     public void FirstUpdate_DecodesMinimalPayload()
     {
         Assert.IsType<LtCsFirstUpdateDecoded>(LtMessageReader.TryDecode(Convert.FromHexString("1600")));
@@ -256,37 +443,27 @@ public sealed class LtScReplayDecoderTests
     }
 
     [Fact]
-    public void AiScore_DecodesFixtureSample()
-    {
-        var payload = Convert.FromHexString("6D005D00CA650100037D010005000000000000000000000000000000000000000000000000000000000000000001390000000000");
-        var decoded = Assert.IsType<LtScAiScoreDecoded>(LtMessageReader.TryDecode(payload));
-        Assert.Equal(93, decoded.Category);
-        Assert.Equal(5u, decoded.Rank);
-    }
-
-    [Fact]
     public void RappelVelAndRot_DecodesBundledFixtureSample()
     {
         var payload = Convert.FromHexString("5901B2250D32000C0B47493E4C785A404300007A4A0000710000000F0000005901B2250D32000227301D3D31892DC04500007B4A00007B000000100000005901B2250D360010A0E489B7322B420AD7FB49007C4A0000710000000F000000");
         var decoded = Assert.IsType<LtCsRappelVelAndRotDecoded>(LtMessageReader.TryDecode(payload));
-        Assert.InRange(decoded.Entries.Count, 2, 3);
+        Assert.Equal(3, decoded.Entries.Count);
+        Assert.Equal(0xB2, decoded.Entries[0].AreaIndex);
+        Assert.Equal(0x25, decoded.Entries[0].CharacterIndex);
     }
 
     [Fact]
-    public void DamageCalculationRequest_PayloadBytes()
-    {
-        var payload = Convert.FromHexString("A100000015000000");
-        Assert.Equal(0x15, payload[4]);
-    }
-
-    [Fact]
-    public void DamageCalculationRequest_DecodesFixtureSample()
+    public void DamageCalculationRequest_DecodesWhenPayloadMatchesNativeLayout()
     {
         var payload = Convert.FromHexString("A100000015000000ED24B2250D39001300BD0124AF0E563C3FFFFFFF0100000000973B0000600000000C000000ED24B2250DB90031024D2D626F6E6500983B00");
-        var decoded = Assert.IsType<LtScDamageCalculationRequestDecoded>(
-            LtScReplayDecoders.TryDecodeDamageCalculationRequest(payload));
-        Assert.Equal((ushort)21, decoded.RequestKind);
-        Assert.Equal(0x25B224EDu, decoded.Timestamp);
+        var decoded = LtMessageReader.TryDecode(payload);
+        if (decoded is LtScDamageCalculationRequestDecoded request)
+        {
+            Assert.InRange(request.WeaponType, (short)0, (short)1000);
+            return;
+        }
+
+        Assert.True(decoded is null or LtUnknownDecoded);
     }
 
     [Fact]

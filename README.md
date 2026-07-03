@@ -69,17 +69,14 @@ Versão atual: `ReplayToolkitVersion.Current` (pré-1.0, sem garantia de API est
 | Arquitetura | [docs/developer-guide/architecture.md](docs/developer-guide/architecture.md) |
 | Metodologia RE | [docs/developer-guide/reverse-engineering.md](docs/developer-guide/reverse-engineering.md) |
 | Contribuir & issues | [docs/developer-guide/contributing.md](docs/developer-guide/contributing.md) |
+| Codecs ILT nativos | [docs/protocol/ilt-native-codecs.md](docs/protocol/ilt-native-codecs.md) |
 | **Status e limitações** | [docs/project-status.md](docs/project-status.md) |
 | Fixtures de teste | [docs/getting-started/fixtures.md](docs/getting-started/fixtures.md) |
 
 ## Limitações conhecidas (resumo)
 
-| Tópico | Situação |
-|--------|----------|
-| Cobertura ILT | Parcial — muitos pacotes ainda são `LtUnknownDecoded`; use `coverage` na CLI |
-| Formato | Não oficial; patches do cliente podem quebrar layouts |
-| Escopo | Pré-1.0, formato primeiro — sem SLA, NuGet publicado TBD, sem camada de produto |
-| Testes reais | Dependem de fixtures locais (`CROSSFIRE_REPLAY_FIXTURE_CFN`) |
+- **ILT:** cobertura depende do replay — use `coverage` na CLI; detalhes em [project-status.md](docs/project-status.md)
+- **Formato não oficial;** pré-1.0, sem SLA/NuGet publicado; testes reais exigem fixtures locais
 
 Detalhes, roadmap e orientação para uso comercial: [docs/project-status.md](docs/project-status.md).
 

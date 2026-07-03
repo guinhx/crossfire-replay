@@ -11,14 +11,17 @@ Este documento descreve honestamente o que o **CrossFire Replay Toolkit** oferec
 | PacketSimulator moderno (2026) | Layout, metadata, middle blob, timeline |
 | Round-trip byte-a-byte | Foco principal do projeto |
 | Testes unitários sintéticos | Rodam em CI sem fixtures externas |
+| Decoders ILT nativos (prioritários) | Ver [protocol/ilt-native-codecs.md](protocol/ilt-native-codecs.md) |
 
 ## Limitações conhecidas
 
-### 1. Cobertura ILT incompleta
+### 1. Cobertura ILT depende do replay
 
-Muitos pacotes ILT ainda viram `LtUnknownDecoded`. O catálogo de IDs (`EMessageIdCatalog`) cobre milhares de símbolos, mas **decoders semânticos** existem para dezenas de tipos prioritários (dano, posição, armas, round, score, etc.).
+O catálogo de IDs (`EMessageIdCatalog`) cobre milhares de símbolos; **decoders semânticos** existem para dezenas de tipos prioritários (dano, posição, armas, round, score, modos especiais, etc.), alinhados ao wire nativo quando possível — ver [protocol/ilt-native-codecs.md](protocol/ilt-native-codecs.md).
 
-**Impacto:** analytics sério (economia, heatmaps, coach) exige trabalho contínuo de decode ou consumo de payloads brutos.
+A taxa de decode **varia por replay**: no fixture de referência usado nos testes de integração, a cobertura semântica chega a **~100%** dos pacotes ILT; em outros mapas, modos ou builds, pacotes ainda viram `LtUnknownDecoded`.
+
+**Impacto:** analytics sério (economia, heatmaps, coach) exige validar com replays reais da sua região e expandir decoders conforme necessário, ou consumir payloads brutos.
 
 **Como medir hoje:**
 

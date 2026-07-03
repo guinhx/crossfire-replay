@@ -36,6 +36,24 @@ public sealed class LtBitstreamWriter
 
     public void WriteMessageId(EMessageId messageId) => WriteBits((ushort)messageId, 16);
 
+    public void WriteFixedString(string? value, int maxChars)
+    {
+        var written = 0;
+        if (!string.IsNullOrEmpty(value))
+        {
+            foreach (var ch in value)
+            {
+                if (written >= maxChars)
+                    break;
+
+                WriteUInt8((byte)ch);
+                written++;
+            }
+        }
+
+        WriteUInt8(0);
+    }
+
     public void AlignToNextByte()
     {
         if (_bitPos != 0)

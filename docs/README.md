@@ -24,6 +24,7 @@
 | [architecture.md](developer-guide/architecture.md) | Camadas, namespaces, extensão |
 | [reverse-engineering.md](developer-guide/reverse-engineering.md) | Como validamos layouts (ImHex, round-trip) |
 | [contributing.md](developer-guide/contributing.md) | PRs, issues, convenções |
+| [ilt-native-codecs.md](protocol/ilt-native-codecs.md) | Decoders ILT alinhados ao wire nativo |
 | [project-status.md](project-status.md) | Limitações, uso comercial, roadmap |
 | [fixtures.md](getting-started/fixtures.md) | Replays locais para testes de integração |
 
@@ -34,12 +35,4 @@
 
 ## Estado do projeto
 
-| Área | Status |
-|------|--------|
-| Leitura `.cfr` SimpleProtocol | Estável para mensagens implementadas |
-| Container Brotli / AES `.cfn` | Round-trip nos testes |
-| PacketSimulator moderno (2026) | Layout + timeline + ILT parcial |
-| Decoders ILT semânticos | Em expansão — ver `coverage` na CLI |
-| Analytics / export coach | Fora de escopo atual |
-
-Detalhes: [project-status.md](project-status.md). Para lacunas de decode, abra uma issue com o template **Decode / format gap**.
+Limitações, escopo, roadmap e orientação para uso comercial: [project-status.md](project-status.md). Para lacunas de decode, abra uma issue com o template **Decode / format gap**.

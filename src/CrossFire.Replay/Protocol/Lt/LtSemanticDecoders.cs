@@ -242,51 +242,8 @@ internal static class LtSemanticDecoders
         }
     }
 
-    public static LtDecodedMessage? TryDecodeLadderArea(ReadOnlySpan<byte> payload)
-    {
-        if (payload.Length < 2)
-            return null;
-
-        try
-        {
-            var reader = new LtBitstreamReader(payload);
-            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScLadderArea)
-                return null;
-
-            if (!reader.HasRemaining)
-                return new LtLadderAreaDecoded(0, new Vector3F(0, 0, 0), new Vector3F(0, 0, 0), new Vector3F(0, 0, 0), 0, false);
-
-            if (payload.Length < 44)
-                return DecodeCompactLadderArea(payload);
-
-            var objectId = reader.ReadObjectId();
-            var position = reader.ReadVector3();
-            var rotation = new Vector3F(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
-            reader.ReadSingle();
-            var dimensions = reader.ReadVector3();
-            var ladderType = reader.ReadUInt8();
-
-            return new LtLadderAreaDecoded(objectId, position, rotation, dimensions, ladderType);
-        }
-        catch (InvalidOperationException)
-        {
-            return null;
-        }
-    }
-
-    private static LtLadderAreaDecoded DecodeCompactLadderArea(ReadOnlySpan<byte> payload)
-    {
-        var areaNumber = payload.Length > 8 ? payload[8] : (byte)0;
-        var ladderType = payload.Length > 16 ? payload[16] : (byte)0;
-
-        return new LtLadderAreaDecoded(
-            0,
-            new Vector3F(areaNumber, 0, 0),
-            new Vector3F(0, 0, 0),
-            new Vector3F(0, 0, 0),
-            ladderType,
-            false);
-    }
+    public static LtDecodedMessage? TryDecodeLadderArea(ReadOnlySpan<byte> payload) =>
+        LtNativeSerializers.TryDecodeLadderArea(payload);
 
     public static LtDecodedMessage? TryDecodePlayerRespawn(ReadOnlySpan<byte> payload)
     {

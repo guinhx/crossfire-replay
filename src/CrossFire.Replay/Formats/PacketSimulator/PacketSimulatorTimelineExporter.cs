@@ -305,7 +305,7 @@ public static class PacketSimulatorTimelineExporter
             },
             LtScDamageSiteStateDecoded damageSite => new()
             {
-                ["objectHandle"] = damageSite.ObjectHandle,
+                ["objectId"] = damageSite.ObjectId,
                 ["isOn"] = damageSite.IsOn,
             },
             LtScDefenceTowerChangeStateDecoded tower => new()
@@ -321,6 +321,8 @@ public static class PacketSimulatorTimelineExporter
             {
                 ["coreObjectId"] = arcadia.CoreObjectId,
                 ["eventKind"] = arcadia.EventKind,
+                ["curHp"] = arcadia.CurHp,
+                ["isReplayArchival"] = arcadia.IsReplayArchivalLayout,
             },
             LtScIngameItemDroppedDecoded drop => new()
             {

@@ -53,6 +53,12 @@ public sealed class LtBitstreamReader
     public Vector3F ReadVector3() =>
         new(ReadSingle(), ReadSingle(), ReadSingle());
 
+    public int ConsumedByteCount => _bitPos == 0 ? _bytePos : _bytePos + 1;
+
+    public int ConsumedBitCount => _bytePos * 8 + _bitPos;
+
+    public bool IsFullyConsumed => RemainingBits == 0;
+
     public ushort ReadObjectId() => ReadUInt16();
 
     public uint ReadGuardedUInt32()

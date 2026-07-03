@@ -1,7 +1,5 @@
 using CrossFire.Replay.Protocol;
 
-using CrossFire.Replay.Protocol;
-
 namespace CrossFire.Replay.Protocol.Lt;
 
 public static class LtMessageReader
@@ -77,7 +75,7 @@ public static class LtMessageReader
         EMessageId.MsgScAddTimeItem => 48,
         EMessageId.MsgScAmmoSupplySite => 32,
         EMessageId.MsgScDamageSiteState => 16,
-        EMessageId.MsgScDamageSite => 128,
+        EMessageId.MsgScDamageSite => 24,
         EMessageId.MsgScAiDamage => 128,
         EMessageId.MsgScNanoNanopoint => 128,
         EMessageId.MsgScHpInfoAi => 128,
@@ -86,7 +84,7 @@ public static class LtMessageReader
         EMessageId.MsgScAiBossTowerChangeSkillStateUsing => 128,
         EMessageId.MsgSc3rdExplodeDestroyGeneratorFire => 128,
         EMessageId.MsgScPresentTeamAceUser => 64,
-        EMessageId.MsgScDamageCalculationRequest => 128,
+        EMessageId.MsgScDamageCalculationRequest => 2048,
         EMessageId.MsgScSheepWantedList => 16,
         EMessageId.MsgCsFirstUpdate => 8,
         EMessageId.MsgScAiAckCanDefuseC4 => 8,
@@ -166,7 +164,8 @@ public static class LtMessageReader
                 EMessageId.MsgScThrowGrenade => LtSemanticDecoders.TryDecodeThrowGrenade(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgScShotInfo => LtSemanticDecoders.TryDecodeShotInfo(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgScSetCurWeapon => LtSemanticDecoders.TryDecodeSetCurWeapon(payload) ?? new LtUnknownDecoded(id, payload.Length),
-                EMessageId.MsgScLadderArea => LtSemanticDecoders.TryDecodeLadderArea(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScLadderArea => LtNativeSerializers.TryDecodeLadderArea(payload) as LtDecodedMessage
+                    ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgScPlayerRespawn => LtSemanticDecoders.TryDecodePlayerRespawn(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgScPlayerIn => LtSemanticDecoders.TryDecodePlayerIn(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgCs1SecondPassed => Decode1SecondPassed(payload),

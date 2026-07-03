@@ -313,7 +313,20 @@ public sealed record LtScArcadiaCoreSwitchStateDecoded(
     byte EventKind,
     uint Timestamp,
     byte SubState,
-    int PayloadLength) : LtDecodedMessage(EMessageId.MsgScArcadiaCoreSwitchState);
+    int PayloadLength,
+    uint CurHp = 0,
+    uint SwitchSlot = 0,
+    int CoreTableKey = 0,
+    int ReplaySentinelA = 0,
+    int ReplaySentinelB = 0,
+    byte[]? ContextExtension = null,
+    Vector3F Orientation = default,
+    Vector3F Position = default,
+    byte GuardByte = 0,
+    uint ValidMask = 0,
+    uint AuxField = 0,
+    ushort RelatedObjectId = 0,
+    bool IsReplayArchivalLayout = false) : LtDecodedMessage(EMessageId.MsgScArcadiaCoreSwitchState);
 
 public sealed record LtScCheatScaleDownDecoded(
     float Scale,
@@ -327,9 +340,8 @@ public sealed record LtScAddTimeItemDecoded(
     float? Ratio) : LtDecodedMessage(EMessageId.MsgScAddTimeItem);
 
 public sealed record LtScDamageSiteStateDecoded(
-    uint ObjectHandle,
-    bool IsOn,
-    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScDamageSiteState);
+    ushort ObjectId,
+    bool IsOn) : LtDecodedMessage(EMessageId.MsgScDamageSiteState);
 
 public sealed record LtScDefenceTowerChangeStateDecoded(
     uint Timestamp,
@@ -345,7 +357,11 @@ public sealed record LtScDefenceTowerChangeStateDecoded(
 public sealed record LtScForceLeavePollStartEntryDecoded(
     uint FieldA,
     uint FieldB,
-    uint Timestamp);
+    uint Timestamp,
+    string? RequesterName = null,
+    string? TargetName = null,
+    byte ReasonNum = 0,
+    bool IsReplayBundledLayout = true);
 
 public sealed record LtScForceLeavePollStartDecoded(
     IReadOnlyList<LtScForceLeavePollStartEntryDecoded> Entries) : LtDecodedMessage(EMessageId.MsgScForceLeavePollStart);
@@ -363,16 +379,10 @@ public sealed record LtScPlayerLevelUpDecoded(
     ushort Amount,
     bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScPlayerLevelUp);
 
-public sealed record LtScDamageSiteEntryDecoded(
-    uint FieldA,
-    uint FieldB,
-    uint FieldC,
-    uint FieldD);
-
 public sealed record LtScDamageSiteDecoded(
-    uint Header,
-    IReadOnlyList<LtScDamageSiteEntryDecoded> Entries,
-    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScDamageSite);
+    Vector3F Dimension,
+    int DamageSiteType,
+    bool RenderEffect) : LtDecodedMessage(EMessageId.MsgScDamageSite);
 
 public sealed record LtScStageLightNodeClearDecoded(
     byte NodeIndex,
@@ -383,23 +393,31 @@ public sealed record LtCsFirstUpdateDecoded() : LtDecodedMessage(EMessageId.MsgC
 public sealed record LtScAiAckCanDefuseC4Decoded(bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScAiAckCanDefuseC4);
 
 public sealed record LtScAiScoreDecoded(
-    ushort Category,
-    uint PrimaryScore,
-    uint SecondaryScore,
-    uint Rank,
-    ushort TrailingValue,
-    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScAiScore);
+    sbyte BotIndex,
+    ushort Health,
+    ushort ArmorPoint,
+    ushort NumKill,
+    ushort NumDeath,
+    ushort CurrentGameMoney) : LtDecodedMessage(EMessageId.MsgScAiScore);
 
 public sealed record LtScDamageCalculationRequestDecoded(
-    ushort RequestKind,
-    uint Reserved,
-    uint Timestamp,
-    ushort FieldA,
-    ushort FieldB,
-    ushort FieldC,
-    float ParamA,
-    float ParamB,
-    uint Flag,
+    sbyte Attacker,
+    Vector3F ShotPos,
+    short WeaponType,
+    float GunDirX,
+    float GunDirY,
+    float GunDirZ,
+    float GunDirW,
+    float GunRotAddY,
+    float LastTargetSize,
+    ushort CurZoomStep,
+    int CurDetailMoveIndex,
+    byte GunRotLeftCenterRight,
+    int PlayerInAirState,
+    int GvCurrMoveTypeFlag,
+    bool InLadder,
+    float MatchItemRecoilless,
+    IReadOnlyList<Vector3F> ThirdPartyPositions,
     bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScDamageCalculationRequest);
 
 public sealed record LtScSheepWantedListDecoded(
@@ -407,14 +425,11 @@ public sealed record LtScSheepWantedListDecoded(
     bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScSheepWantedList);
 
 public sealed record LtCsRappelVelAndRotEntryDecoded(
-    uint Timestamp,
-    ushort FieldA,
-    float PosX,
-    float PosY,
-    float PosZ,
-    uint FieldB,
-    uint FieldC,
-    byte FieldD);
+    byte AreaIndex,
+    sbyte CharacterIndex,
+    Vector3F Velocity,
+    Vector3F Position,
+    float Ratio);
 
 public sealed record LtCsRappelVelAndRotDecoded(
     IReadOnlyList<LtCsRappelVelAndRotEntryDecoded> Entries) : LtDecodedMessage(EMessageId.MsgCsRappelVelAndRot);

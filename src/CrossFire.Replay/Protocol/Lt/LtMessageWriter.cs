@@ -20,6 +20,16 @@ public static class LtMessageWriter
             LtAllScoresDecoded allScores => EncodeAllScores(allScores),
             LtDamageDecoded damage => EncodeDamage(damage),
             LtHitInfoDecoded hitInfo => EncodeHitInfo(hitInfo),
+            LtScDamageSiteDecoded damageSite => LtNativeSerializers.EncodeDamageSite(damageSite),
+            LtScDamageSiteStateDecoded damageSiteState => LtNativeSerializers.EncodeDamageSiteState(damageSiteState),
+            LtScAiScoreDecoded aiScore => LtNativeSerializers.EncodeAiScore(aiScore),
+            LtCsRappelVelAndRotDecoded rappel => LtNativeSerializers.EncodeRappelVelAndRot(rappel),
+            LtScDamageCalculationRequestDecoded damageCalc => LtNativeSerializers.EncodeDamageCalculationRequest(damageCalc),
+            LtScNjAiFireStartDecoded njAiFire => LtNativeSerializers.EncodeNjAiFireStart(njAiFire),
+            LtScBossReviveDecoded bossRevive => LtNativeSerializers.EncodeBossRevive(bossRevive),
+            LtScForceLeavePollStartDecoded forceLeave => LtNativeSerializers.EncodeForceLeavePollStart(forceLeave),
+            LtLadderAreaDecoded ladderArea => LtNativeSerializers.EncodeLadderArea(ladderArea),
+            LtScArcadiaCoreSwitchStateDecoded arcadia => LtNativeSerializers.EncodeArcadiaCoreSwitchState(arcadia),
             _ => throw new NotSupportedException($"LT encode not implemented for {message.GetType().Name}."),
         };
 
