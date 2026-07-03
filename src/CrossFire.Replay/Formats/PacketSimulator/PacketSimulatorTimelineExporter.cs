@@ -291,6 +291,44 @@ public static class PacketSimulatorTimelineExporter
                 ["skyScale"] = world.SkyScale,
             },
             LtBombSitesDecoded sites => new() { ["siteCount"] = sites.Sites.Count },
+            LtScCheatScaleDownDecoded scale => new()
+            {
+                ["scale"] = scale.Scale,
+                ["sendIndex"] = scale.SendIndex,
+            },
+            LtScAddTimeItemDecoded addTime => new()
+            {
+                ["hasBody"] = addTime.HasBody,
+                ["characterIndex"] = addTime.CharacterIndex,
+                ["itemType"] = addTime.ItemType,
+            },
+            LtScDamageSiteStateDecoded damageSite => new()
+            {
+                ["objectHandle"] = damageSite.ObjectHandle,
+                ["isOn"] = damageSite.IsOn,
+            },
+            LtScDefenceTowerChangeStateDecoded tower => new()
+            {
+                ["towerIndex"] = tower.TowerIndex,
+                ["stateA"] = tower.StateA,
+                ["stateB"] = tower.StateB,
+            },
+            LtScBossReviveDecoded boss => new() { ["entryCount"] = boss.Entries.Count },
+            LtScArcadiaCoreSwitchStateDecoded arcadia => new()
+            {
+                ["coreObjectId"] = arcadia.CoreObjectId,
+                ["eventKind"] = arcadia.EventKind,
+            },
+            LtScIngameItemDroppedDecoded drop => new()
+            {
+                ["itemId"] = drop.ItemId,
+                ["dropKind"] = drop.DropKind,
+            },
+            LtScDefenceTowerFireDecoded fireTower => new()
+            {
+                ["towerIndex"] = fireTower.TowerIndex,
+                ["state"] = fireTower.State,
+            },
             LtUnknownDecoded unknown => new()
             {
                 ["nativeName"] = unknown.NativeName,

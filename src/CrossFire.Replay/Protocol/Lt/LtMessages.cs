@@ -312,3 +312,30 @@ public sealed record LtScArcadiaCoreSwitchStateDecoded(
     uint Timestamp,
     byte SubState,
     int PayloadLength) : LtDecodedMessage(EMessageId.MsgScArcadiaCoreSwitchState);
+
+public sealed record LtScCheatScaleDownDecoded(
+    float Scale,
+    int SendIndex,
+    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScCheatScaleDown);
+
+public sealed record LtScAddTimeItemDecoded(
+    bool HasBody,
+    byte? CharacterIndex,
+    byte? ItemType,
+    float? Ratio) : LtDecodedMessage(EMessageId.MsgScAddTimeItem);
+
+public sealed record LtScDamageSiteStateDecoded(
+    uint ObjectHandle,
+    bool IsOn,
+    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScDamageSiteState);
+
+public sealed record LtScDefenceTowerChangeStateDecoded(
+    uint Timestamp,
+    ushort FieldA,
+    ushort FieldB,
+    ushort TowerIndex,
+    uint StateA,
+    uint StateB,
+    uint StateC,
+    uint StateD,
+    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScAi2ModeDefenceTowerChangeState);

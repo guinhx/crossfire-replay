@@ -38,6 +38,9 @@ public static class LtMessageReader
 
     private static bool ValidateGenericPeek(EMessageId id, ReadOnlySpan<byte> payload)
     {
+        if (payload.Length > GetMaxPlausiblePayloadBytes(id))
+            return false;
+
         if (payload.Length <= 512)
             return true;
 
@@ -49,6 +52,32 @@ public static class LtMessageReader
             _ => true,
         };
     }
+
+    private static int GetMaxPlausiblePayloadBytes(EMessageId id) => id switch
+    {
+        EMessageId.MsgCsReqLuckyBoom => 24,
+        EMessageId.MsgCsReqForceChangeWeapon => 64,
+        EMessageId.MsgCsAmmoReload => 64,
+        EMessageId.MsgCsScoreInfoOnOff => 64,
+        EMessageId.MsgCsHackParam => 128,
+        EMessageId.MsgCsAiReqCanDefuseC4 => 64,
+        EMessageId.MsgScGetMyWeapon => 128,
+        EMessageId.MsgScAddTimeItem => 48,
+        EMessageId.MsgScAmmoSupplySite => 32,
+        EMessageId.MsgScDamageSiteState => 16,
+        EMessageId.MsgScDamageSite => 128,
+        EMessageId.MsgScAiDamage => 128,
+        EMessageId.MsgScNanoNanopoint => 128,
+        EMessageId.MsgScHpInfoAi => 128,
+        EMessageId.MsgScAi2ModeDefenceWeaponCrossbowFire => 128,
+        EMessageId.MsgScKingsObjectInitRockPaperScissors => 128,
+        EMessageId.MsgScAiBossTowerChangeSkillStateUsing => 128,
+        EMessageId.MsgSc3rdExplodeDestroyGeneratorFire => 128,
+        EMessageId.MsgCsRappelVelAndRot => 128,
+        EMessageId.MsgCsWireC4Defuse => 128,
+        EMessageId.MsgScAiCraterRenewalEnergyBallDestroy => 256,
+        _ => int.MaxValue,
+    };
 
     private static bool ValidateBombSitesPeek(LtBitstreamReader reader, ReadOnlySpan<byte> payload)
     {
@@ -107,6 +136,10 @@ public static class LtMessageReader
                 EMessageId.MsgScAi2ModeDefenceTowerFire => LtScReplayDecoders.TryDecodeDefenceTowerFire(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgScBossRevive => LtScReplayDecoders.TryDecodeBossRevive(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgScArcadiaCoreSwitchState => LtScReplayDecoders.TryDecodeArcadiaCoreSwitchState(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScAi2ModeDefenceTowerChangeState => LtScReplayDecoders.TryDecodeDefenceTowerChangeState(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScCheatScaleDown => LtScReplayDecoders.TryDecodeCheatScaleDown(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScAddTimeItem => LtScReplayDecoders.TryDecodeAddTimeItem(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScDamageSiteState => LtScReplayDecoders.TryDecodeDamageSiteState(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 _ => new LtUnknownDecoded(id, payload.Length),
             };
         }

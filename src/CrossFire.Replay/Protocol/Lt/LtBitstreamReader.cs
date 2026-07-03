@@ -19,10 +19,20 @@ public sealed class LtBitstreamReader
 
     public int BytePosition => _bytePos;
     public int BitPosition => _bitPos;
-    public bool IsEmpty => _bytePos >= _data.Length;
-    public bool HasRemaining => _bitPos != 0 || _bytePos < _data.Length;
-    public int RemainingBits =>
-        _bytePos >= _data.Length ? 0 : (_data.Length - _bytePos) * 8 - _bitPos;
+    public bool IsEmpty => EffectiveBytePosition >= _data.Length;
+    public bool HasRemaining => EffectiveBytePosition < _data.Length;
+    public int RemainingBits
+    {
+        get
+        {
+            if (EffectiveBytePosition >= _data.Length)
+                return 0;
+
+            return (_data.Length - EffectiveBytePosition) * 8 - _bitPos;
+        }
+    }
+
+    private int EffectiveBytePosition => _bitPos == 8 ? _bytePos + 1 : _bytePos;
 
     public bool ReadBoolean() => ReadBits(1) != 0;
     public byte ReadUInt8() => (byte)ReadBits(8);
@@ -118,7 +128,17 @@ public sealed class LtBitstreamReader
             bitsRemaining -= bitsToRead;
         }
 
+        NormalizeByteAlignment();
         return result;
+    }
+
+    private void NormalizeByteAlignment()
+    {
+        if (_bitPos == 8)
+        {
+            _bytePos++;
+            _bitPos = 0;
+        }
     }
 
     public ushort ReadMessageId() => (ushort)ReadBits(16);

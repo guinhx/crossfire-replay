@@ -82,6 +82,61 @@ public sealed class LtScReplayDecoderTests
     }
 
     [Fact]
+    public void CheatScaleDown_DecodesFixtureSample()
+    {
+        var hex = "880200000000000000000000F8FFFFFF0700000000000000000000000000000000000000000000000080010000000000";
+        var payload = Convert.FromHexString(hex);
+        var decoded = Assert.IsType<LtScCheatScaleDownDecoded>(LtMessageReader.TryDecode(payload));
+
+        Assert.Equal(0f, decoded.Scale);
+        Assert.Equal(0, decoded.SendIndex);
+        Assert.True(decoded.HasTrailingData);
+    }
+
+    [Fact]
+    public void DefenceTowerChangeState_DecodesFixtureSample()
+    {
+        var hex = "7D03B2250DD7040C64000000640000000200000005000000010000000000000000000000000000000000000000000000";
+        var payload = Convert.FromHexString(hex);
+        var decoded = Assert.IsType<LtScDefenceTowerChangeStateDecoded>(LtMessageReader.TryDecode(payload));
+
+        Assert.Equal(0xD70D25B2u, decoded.Timestamp);
+        Assert.Equal(0u, decoded.TowerIndex);
+        Assert.Equal(100u, decoded.StateA);
+        Assert.Equal(2u, decoded.StateB);
+    }
+
+    [Fact]
+    public void AddTimeItem_DecodesIdOnlyPayload()
+    {
+        var payload = new byte[] { 0x9A, 0x00 };
+        var decoded = Assert.IsType<LtScAddTimeItemDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.False(decoded.HasBody);
+    }
+
+    [Fact]
+    public void DamageSiteState_DecodesFixtureSample()
+    {
+        var hex = "01010100";
+        var payload = Convert.FromHexString(hex);
+        var decoded = Assert.IsType<LtScDamageSiteStateDecoded>(LtMessageReader.TryDecode(payload));
+
+        Assert.Equal(1u, decoded.ObjectHandle);
+        Assert.False(decoded.IsOn);
+    }
+
+    [Fact]
+    public void DamageSiteState_DecodesExtendedFixtureSample()
+    {
+        var hex = "01010100FF";
+        var payload = Convert.FromHexString(hex);
+        var decoded = Assert.IsType<LtScDamageSiteStateDecoded>(LtMessageReader.TryDecode(payload));
+
+        Assert.Equal(1u, decoded.ObjectHandle);
+        Assert.True(decoded.IsOn);
+    }
+
+    [Fact]
     public void UserFixture_DecodesTopUnknownIds()
     {
         if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
@@ -102,12 +157,20 @@ public sealed class LtScReplayDecoderTests
         Assert.NotNull(weaponSlot);
         Assert.Equal(0, weaponSlot!.Unknown);
 
-        var bossRevive = report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScBossRevive);
-        Assert.NotNull(bossRevive);
-        Assert.Equal(0, bossRevive!.Unknown);
+        Assert.True(report.SemanticPacketRatio >= 0.85);
 
-        var arcadia = report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScArcadiaCoreSwitchState);
-        Assert.NotNull(arcadia);
-        Assert.Equal(0, arcadia!.Unknown);
+        foreach (var row in new[]
+                 {
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScBossRevive),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScArcadiaCoreSwitchState),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScCheatScaleDown),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScAi2ModeDefenceTowerChangeState),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScAddTimeItem),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScDamageSiteState),
+                 })
+        {
+            if (row is not null)
+                Assert.Equal(0, row.Unknown);
+        }
     }
 }

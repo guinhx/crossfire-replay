@@ -75,6 +75,117 @@ internal static class LtScReplayDecoders
         }
     }
 
+    public static LtDecodedMessage? TryDecodeDefenceTowerChangeState(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 28)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScAi2ModeDefenceTowerChangeState)
+                return null;
+
+            var timestamp = reader.ReadUInt32();
+            var fieldA = reader.ReadUInt16();
+            var fieldB = reader.ReadUInt16();
+            var towerIndex = reader.ReadUInt16();
+            var stateA = reader.ReadUInt32();
+            var stateB = reader.ReadUInt32();
+            var stateC = reader.ReadUInt32();
+            var stateD = reader.ReadUInt32();
+            var hasTrailing = reader.HasRemaining;
+
+            return new LtScDefenceTowerChangeStateDecoded(
+                timestamp,
+                fieldA,
+                fieldB,
+                towerIndex,
+                stateA,
+                stateB,
+                stateC,
+                stateD,
+                hasTrailing);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    public static LtDecodedMessage? TryDecodeCheatScaleDown(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 10)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScCheatScaleDown)
+                return null;
+
+            var scale = reader.ReadSingle();
+            var sendIndex = reader.ReadInt32();
+            return new LtScCheatScaleDownDecoded(scale, sendIndex, reader.HasRemaining);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    public static LtDecodedMessage? TryDecodeAddTimeItem(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 2)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScAddTimeItem)
+                return null;
+
+            if (!reader.HasRemaining)
+                return new LtScAddTimeItemDecoded(false, null, null, null);
+
+            var characterIndex = reader.ReadUInt8();
+            if (!reader.HasRemaining)
+                return new LtScAddTimeItemDecoded(true, characterIndex, null, null);
+
+            var itemType = reader.ReadUInt8();
+            if (!reader.HasRemaining)
+                return new LtScAddTimeItemDecoded(true, characterIndex, itemType, null);
+
+            var ratio = reader.ReadSingle();
+            return new LtScAddTimeItemDecoded(true, characterIndex, itemType, ratio);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    public static LtDecodedMessage? TryDecodeDamageSiteState(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 4)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScDamageSiteState)
+                return null;
+
+            var objectHandle = (uint)reader.ReadUInt16();
+            var isOn = reader.HasRemaining && reader.ReadUInt8() != 0;
+            return new LtScDamageSiteStateDecoded(objectHandle, isOn, reader.HasRemaining);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
     public static LtDecodedMessage? TryDecodeBossRevive(ReadOnlySpan<byte> payload)
     {
         if (payload.Length < BossReviveMinEntryBytes)

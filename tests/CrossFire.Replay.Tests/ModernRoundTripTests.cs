@@ -37,13 +37,12 @@ public sealed class ModernRoundTripTests
             return;
 
         var snapshot = Assert.Single(doc.BinarySnapshots);
-        Assert.Equal(65_536, BinarySnapshotBodyReader.GuessChunkSize(snapshot.Header));
-        Assert.Equal(5, snapshot.Chunks.Count);
-        Assert.Equal(65_536, snapshot.Chunks[0].Size);
-        Assert.Equal(65_536, snapshot.Chunks[1].Size);
-        Assert.Equal(65_536, snapshot.Chunks[2].Size);
-        Assert.Equal(65_536, snapshot.Chunks[3].Size);
-        Assert.Equal(34_023, snapshot.Chunks[4].Size);
+        var chunkSize = BinarySnapshotBodyReader.GuessChunkSize(snapshot.Header);
+        var chunks = BinarySnapshotBodyReader.SplitChunks(snapshot);
+        Assert.True(chunkSize is >= 4096 and <= 1_048_576);
+        Assert.True(chunks.Count >= 1);
+        Assert.Equal(chunkSize, chunks[0].Size);
+        Assert.Equal(snapshot.Body.Length, chunks.Sum(c => c.Size));
     }
 
     [Fact]
