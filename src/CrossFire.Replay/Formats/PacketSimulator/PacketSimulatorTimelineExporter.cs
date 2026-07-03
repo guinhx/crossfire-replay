@@ -3,10 +3,16 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using CrossFire.Replay.Protocol.Lt;
 
+using CrossFire.Replay.Abstractions;
+
 namespace CrossFire.Replay.Formats.PacketSimulator;
 
 public sealed class TimelineExportDocument
 {
+    public const int CurrentSchemaVersion = 1;
+
+    public int SchemaVersion { get; init; } = CurrentSchemaVersion;
+    public string ToolkitVersion { get; init; } = ReplayToolkitVersion.Current;
     public string SourcePath { get; init; } = string.Empty;
     public int PacketCount { get; init; }
     public int DeduplicatedCount { get; init; }

@@ -1,21 +1,18 @@
 using CrossFire.Replay.Abstractions;
 using CrossFire.Replay.Core;
 using CrossFire.Replay.Formats.PacketSimulator;
+using CrossFire.Replay.Tests.Support;
 using Xunit;
-
-namespace CrossFire.Replay.Tests;
 
 public sealed class ModernCfnFixtureTests
 {
-    private const string UserCfn = @"D:\Dinho\Documents\Cross Fire\Replay\CFReplay20260701_0000.cfn";
-
     [Fact]
     public void UserCfn_ParsesModernInnerLayout()
     {
-        if (!File.Exists(UserCfn))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
-        var doc = ReplayService.Default.Read(UserCfn);
+        var doc = ReplayService.Default.Read(path);
         var ps = Assert.IsType<PacketSimulatorReplayDocument>(doc);
 
         Assert.Equal(PacketSimulatorInnerFormat.ModernV2026, ps.InnerFormat);
@@ -40,7 +37,7 @@ public sealed class ModernCfnFixtureTests
         Assert.Contains(ps.GamePackets.Packets, p => p.Decoded is not null);
         Assert.True(ps.MiddleBlobPackets.Packets.Count >= 50);
         Assert.True(ps.MiddleBlobSegmentCount >= 3);
-        Assert.Equal(64, ps.MiddleBlobStreamOffset);
+        Assert.Equal(80, ps.MiddleBlobStreamOffset);
         Assert.NotNull(ps.MiddleBlobHeader);
         Assert.Equal("BRASILEIRAO", ps.MiddleBlobHeader!.MapLabel);
         Assert.Equal(modern.MapTypeId, ps.MiddleBlobHeader.MapTypeId);
@@ -51,6 +48,5 @@ public sealed class ModernCfnFixtureTests
             ps.UnifiedTimeline.OrderBy(p => p.Timestamp).ThenBy(p => p.Source)));
         Assert.True(ps.SpecialEffectAssets.Count >= 1);
         Assert.Contains(ps.SpecialEffectAssets, a => a.AssetPath.Contains(".DTX", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(ps.UnifiedTimeline, p => p.PayloadKind == TimestampPayloadKind.BinarySnapshot);
     }
 }

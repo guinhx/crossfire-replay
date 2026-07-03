@@ -64,4 +64,7 @@ public enum EMessageId : ushort
     MsgScDamageHackVerificationReq = 0xE1,
     MsgScDamageSite = 0x100,
     MsgScHpInfo = 0x108,
+    MsgScIngameItemDropped = 0x75,
+    MsgScAi2ModeDefenceTowerFire = 0x37A,
+    MsgScBossRevive = 0x30C,
 }

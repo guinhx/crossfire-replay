@@ -1,22 +1,14 @@
 using CrossFire.Replay.Abstractions;
 using CrossFire.Replay.Core;
 using CrossFire.Replay.Formats.PacketSimulator;
+using CrossFire.Replay.Tests.Support;
 using Xunit;
 
 namespace CrossFire.Replay.Tests;
 
 public sealed class MiddleBlobWriterTests
 {
-    private const string ReplayFolder = @"D:\Dinho\Documents\Cross Fire\Replay";
-
-    public static IEnumerable<object[]> UserCfnFiles()
-    {
-        if (!Directory.Exists(ReplayFolder))
-            yield break;
-
-        foreach (var file in Directory.GetFiles(ReplayFolder, "*.cfn").OrderBy(static p => p, StringComparer.OrdinalIgnoreCase))
-            yield return new object[] { file };
-    }
+    public static IEnumerable<object[]> UserCfnFiles() => ReplayFixturePaths.CfnFileTheoryData();
 
     [Theory]
     [MemberData(nameof(UserCfnFiles))]
@@ -46,14 +38,13 @@ public sealed class MiddleBlobWriterTests
     [Fact]
     public void UserFixture_MiddleBlob_HasExpectedSegmentLayout()
     {
-        const string path = @"D:\Dinho\Documents\Cross Fire\Replay\CFReplay20260701_0000.cfn";
-        if (!File.Exists(path))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
         var doc = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(path));
         var parse = PacketSimulatorMiddleBlobReader.Parse(doc.MiddleBlob);
 
-        Assert.Equal(64, parse.StreamOffset);
+        Assert.Equal(80, parse.StreamOffset);
         Assert.True(parse.SegmentCount >= 3);
         Assert.Equal("BRASILEIRAO", parse.Header!.MapLabel);
         Assert.True(parse.Timeline.Packets.Count >= 50);

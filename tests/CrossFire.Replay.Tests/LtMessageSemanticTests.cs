@@ -1,14 +1,13 @@
 using CrossFire.Replay.Core;
 using CrossFire.Replay.Formats.PacketSimulator;
 using CrossFire.Replay.Protocol.Lt;
+using CrossFire.Replay.Tests.Support;
 using Xunit;
 
 namespace CrossFire.Replay.Tests;
 
 public sealed class LtMessageSemanticTests
 {
-    private const string UserCfn = @"D:\Dinho\Documents\Cross Fire\Replay\CFReplay20260701_0000.cfn";
-
     [Fact]
     public void Score_RoundTripsThroughWriter()
     {
@@ -66,10 +65,10 @@ public sealed class LtMessageSemanticTests
     [Fact]
     public void UserCfn_DecodesPrioritySemanticMessages()
     {
-        if (!File.Exists(UserCfn))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
-        var doc = ReplayService.Default.Read(UserCfn);
+        var doc = ReplayService.Default.Read(path);
         var ps = Assert.IsType<PacketSimulatorReplayDocument>(doc);
 
         var decodedCounts = new Dictionary<EMessageId, int>();
@@ -90,8 +89,8 @@ public sealed class LtMessageSemanticTests
     [Fact]
     public void UserReplayFolder_DecodesPhase3SemanticMessages()
     {
-        const string folder = @"D:\Dinho\Documents\Cross Fire\Replay";
-        if (!Directory.Exists(folder))
+        var folder = ReplayFixturePaths.GetReplayFolder();
+        if (folder is null)
             return;
 
         var decodedCounts = new Dictionary<EMessageId, int>();
@@ -131,10 +130,10 @@ public sealed class LtMessageSemanticTests
     [Fact]
     public void UserCfn_AllScores_DecodesWhenPresent()
     {
-        if (!File.Exists(UserCfn))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
-        var doc = ReplayService.Default.Read(UserCfn);
+        var doc = ReplayService.Default.Read(path);
         var ps = Assert.IsType<PacketSimulatorReplayDocument>(doc);
 
         var candidates = EnumeratePackets(ps)
@@ -151,10 +150,10 @@ public sealed class LtMessageSemanticTests
     [Fact]
     public void UserCfn_AllScores_HasPlayerRows()
     {
-        if (!File.Exists(UserCfn))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
-        var doc = ReplayService.Default.Read(UserCfn);
+        var doc = ReplayService.Default.Read(path);
         var ps = Assert.IsType<PacketSimulatorReplayDocument>(doc);
 
         LtAllScoresDecoded? allScores = null;

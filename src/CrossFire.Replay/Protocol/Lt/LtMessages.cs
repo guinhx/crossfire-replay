@@ -276,3 +276,21 @@ public sealed record LtCsLandingStateDecoded(
     LtCsPacketHeaderFields Header,
     float VelocityY,
     int LandType) : LtDecodedMessage(EMessageId.MsgCsLandingState);
+
+public sealed record LtScIngameItemDroppedDecoded(
+    uint Timestamp,
+    byte DropKind,
+    ushort ItemId,
+    float PositionX,
+    float PositionY,
+    int FieldA,
+    int FieldB) : LtDecodedMessage(EMessageId.MsgScIngameItemDropped);
+
+public sealed record LtScDefenceTowerFireDecoded(
+    uint Timestamp,
+    ushort FieldA,
+    ushort FieldB,
+    ushort TowerIndex,
+    float AimX,
+    float AimY,
+    uint State) : LtDecodedMessage(EMessageId.MsgScAi2ModeDefenceTowerFire);

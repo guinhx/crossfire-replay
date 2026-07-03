@@ -1,14 +1,13 @@
 using CrossFire.Replay.Core;
 using CrossFire.Replay.Formats.PacketSimulator;
 using CrossFire.Replay.Protocol.Lt;
+using CrossFire.Replay.Tests.Support;
 using Xunit;
 
 namespace CrossFire.Replay.Tests;
 
 public sealed class PacketSimulatorNativeLayoutTests
 {
-    private const string UserCfn = @"D:\Dinho\Documents\Cross Fire\Replay\CFReplay20260701_0000.cfn";
-
     [Fact]
     public void NativeLayout_LegacyConstants_MatchObservedLayout()
     {
@@ -20,10 +19,10 @@ public sealed class PacketSimulatorNativeLayoutTests
     [Fact]
     public void UserCfn_ModernRoomInfo_ComesFromDescriptorAndMiddleHeader()
     {
-        if (!File.Exists(UserCfn))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
-        var ps = (PacketSimulatorReplayDocument)ReplayService.Default.Read(UserCfn);
+        var ps = (PacketSimulatorReplayDocument)ReplayService.Default.Read(path);
         Assert.Equal(PacketSimulatorInnerFormat.ModernV2026, ps.InnerFormat);
         Assert.Empty(ps.SpectatingRoomInfo);
         Assert.Null(ps.SpectatingRoomInfoDeclaredSize);

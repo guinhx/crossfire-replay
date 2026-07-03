@@ -12,8 +12,12 @@ public static class LtMessageReader
 
         try
         {
-            var id = new LtBitstreamReader(payload).ReadMessageId();
+            var reader = new LtBitstreamReader(payload);
+            var id = reader.ReadMessageId();
             if (!EMessageIdCatalog.IsPlausible(id))
+                return false;
+
+            if (!ValidateMessagePeek((EMessageId)id, reader, payload))
                 return false;
 
             messageId = (EMessageId)id;
@@ -23,6 +27,36 @@ public static class LtMessageReader
         {
             return false;
         }
+    }
+
+    private static bool ValidateMessagePeek(EMessageId id, LtBitstreamReader reader, ReadOnlySpan<byte> payload) =>
+        id switch
+        {
+            EMessageId.MsgScBombSites => ValidateBombSitesPeek(reader, payload),
+            _ => ValidateGenericPeek(id, payload),
+        };
+
+    private static bool ValidateGenericPeek(EMessageId id, ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length <= 512)
+            return true;
+
+        return id switch
+        {
+            EMessageId.MsgCsAiReqCanDefuseC4 => false,
+            EMessageId.MsgScAiDamage => false,
+            EMessageId.MsgScDamageSite => false,
+            _ => true,
+        };
+    }
+
+    private static bool ValidateBombSitesPeek(LtBitstreamReader reader, ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 3)
+            return false;
+
+        var count = reader.ReadUInt8();
+        return count is >= 1 and <= 5;
     }
 
     public static LtDecodedMessage? TryDecode(ReadOnlySpan<byte> payload)
@@ -69,6 +103,8 @@ public static class LtMessageReader
                     => LtCsSemanticDecoders.TryDecodeLinkWeapon(payload, id) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgCsFrogJump => LtCsSemanticDecoders.TryDecodeFrogJump(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgCsLandingState => LtCsSemanticDecoders.TryDecodeLandingState(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScIngameItemDropped => LtScReplayDecoders.TryDecodeIngameItemDropped(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScAi2ModeDefenceTowerFire => LtScReplayDecoders.TryDecodeDefenceTowerFire(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 _ => new LtUnknownDecoded(id, payload.Length),
             };
         }

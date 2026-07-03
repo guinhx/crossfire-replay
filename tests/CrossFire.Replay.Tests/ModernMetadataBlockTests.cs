@@ -1,6 +1,7 @@
 using CrossFire.Replay.Core;
 using CrossFire.Replay.Formats.PacketSimulator;
 using CrossFire.Replay.Protocol.Mm;
+using CrossFire.Replay.Tests.Support;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -8,7 +9,6 @@ namespace CrossFire.Replay.Tests;
 
 public sealed class ModernMetadataBlockTests
 {
-    private const string UserCfn = @"D:\Dinho\Documents\Cross Fire\Replay\CFReplay20260701_0000.cfn";
     private readonly ITestOutputHelper _output;
 
     public ModernMetadataBlockTests(ITestOutputHelper output) => _output = output;
@@ -16,10 +16,10 @@ public sealed class ModernMetadataBlockTests
     [Fact]
     public void UserCfn_ModernMetadata_HasHeaderAndTail()
     {
-        if (!File.Exists(UserCfn))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
-        var ps = (PacketSimulatorReplayDocument)ReplayService.Default.Read(UserCfn);
+        var ps = (PacketSimulatorReplayDocument)ReplayService.Default.Read(path);
         Assert.Equal(PacketSimulatorLayout.ModernMetadataBlockSize, ps.MetadataBlock.Length);
 
         Assert.NotNull(ps.ModernMetadata);

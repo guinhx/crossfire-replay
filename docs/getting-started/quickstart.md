@@ -13,7 +13,7 @@ dotnet build CrossFire.Replay.sln -c Release
 dotnet test CrossFire.Replay.sln -c Release
 ```
 
-Muitos testes de integração fazem **skip automático** se o fixture `CFReplay20260701_0000.cfn` não existir no caminho hardcoded do desenvolvedor. Os testes unitários e round-trip sintéticos rodam sem arquivos externos.
+Testes de integração usam fixtures locais — configure `CROSSFIRE_REPLAY_FIXTURE_CFN` ou veja [fixtures.md](fixtures.md). Testes sintéticos rodam sem arquivos externos.
 
 ## CLI
 
@@ -21,12 +21,16 @@ Projeto: `samples/CrossFire.Replay.Cli`
 
 | Comando | Efeito |
 |---------|--------|
-| `Cli replay.cfn` | Resumo do documento parseado |
-| `Cli replay.cfn --inspect` | Metadados de container (sem parse completo profundo) |
-| `Cli replay.cfn --dump` | Amostra de mensagens / pacotes |
-| `Cli replay.cfn --export-timeline out.json` | Export JSON da timeline ILT |
-| `Cli replay.cfn --export-timeline out.csv` | Export CSV |
-| `Cli --self-test` | Round-trip CFR + containers CFO/CFN |
+| `read replay.cfn` | Resumo do documento parseado |
+| `read replay.cfn --dump` | Amostra de mensagens / pacotes |
+| `inspect replay.cfn` | Metadados de container + structs de layout |
+| `inspect replay.cfn --hex` | Idem + preview hex |
+| `coverage replay.cfn` | Relatório de cobertura ILT semântica |
+| `export-timeline replay.cfn out.json` | Export JSON da timeline ILT (schema v1) |
+| `export-timeline replay.cfn out.csv` | Export CSV |
+| `self-test` | Round-trip CFR + containers CFO/CFN |
+
+Sintaxe legada ainda aceita: `replay.cfn --inspect`, `replay.cfn --export-timeline out.json`.
 
 ### Exemplo de saída (`.cfn` moderno)
 

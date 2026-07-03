@@ -24,11 +24,11 @@ dotnet test CrossFire.Replay.sln
 ### CLI de amostra
 
 ```bash
-dotnet run --project samples/CrossFire.Replay.Cli -- "C:\caminho\replay.cfn"
-dotnet run --project samples/CrossFire.Replay.Cli -- replay.cfn --inspect
-dotnet run --project samples/CrossFire.Replay.Cli -- replay.cfn --dump
-dotnet run --project samples/CrossFire.Replay.Cli -- replay.cfn --export-timeline out.json
-dotnet run --project samples/CrossFire.Replay.Cli -- --self-test
+dotnet run --project samples/CrossFire.Replay.Cli -- read replay.cfn
+dotnet run --project samples/CrossFire.Replay.Cli -- inspect replay.cfn --hex
+dotnet run --project samples/CrossFire.Replay.Cli -- coverage replay.cfn
+dotnet run --project samples/CrossFire.Replay.Cli -- export-timeline replay.cfn out.json
+dotnet run --project samples/CrossFire.Replay.Cli -- self-test
 ```
 
 ### API mínima
@@ -49,7 +49,17 @@ if (doc is PacketSimulatorReplayDocument ps)
 
 Mais exemplos: [docs/getting-started/quickstart.md](docs/getting-started/quickstart.md).
 
+### Empacotar NuGet (local)
+
+```bash
+dotnet pack src/CrossFire.Replay/CrossFire.Replay.csproj -c Release
+```
+
+Versão atual: `ReplayToolkitVersion.Current` (pré-1.0, sem garantia de API estável).
+
 ## Documentação
+
+> **Disclaimer:** Parte da documentação em `docs/` foi escrita com auxílio de IA, apenas para agilizar o processo e permitir que eu me concentrasse em partes mais importantes do projeto (implementação, testes e validação de formatos). O conteúdo reflete o estado atual do código, mas pode conter imprecisões — correções via issue ou PR são bem-vindas.
 
 | Tópico | Link |
 |--------|------|
@@ -59,6 +69,19 @@ Mais exemplos: [docs/getting-started/quickstart.md](docs/getting-started/quickst
 | Arquitetura | [docs/developer-guide/architecture.md](docs/developer-guide/architecture.md) |
 | Metodologia RE | [docs/developer-guide/reverse-engineering.md](docs/developer-guide/reverse-engineering.md) |
 | Contribuir & issues | [docs/developer-guide/contributing.md](docs/developer-guide/contributing.md) |
+| **Status e limitações** | [docs/project-status.md](docs/project-status.md) |
+| Fixtures de teste | [docs/getting-started/fixtures.md](docs/getting-started/fixtures.md) |
+
+## Limitações conhecidas (resumo)
+
+| Tópico | Situação |
+|--------|----------|
+| Cobertura ILT | Parcial — muitos pacotes ainda são `LtUnknownDecoded`; use `coverage` na CLI |
+| Formato | Não oficial; patches do cliente podem quebrar layouts |
+| Escopo | Pré-1.0, formato primeiro — sem SLA, NuGet publicado TBD, sem camada de produto |
+| Testes reais | Dependem de fixtures locais (`CROSSFIRE_REPLAY_FIXTURE_CFN`) |
+
+Detalhes, roadmap e orientação para uso comercial: [docs/project-status.md](docs/project-status.md).
 
 ## Estrutura do repositório
 

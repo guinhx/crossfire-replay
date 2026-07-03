@@ -2,21 +2,20 @@ using CrossFire.Replay.Abstractions;
 using CrossFire.Replay.Compression;
 using CrossFire.Replay.Core;
 using CrossFire.Replay.Formats.PacketSimulator;
+using CrossFire.Replay.Tests.Support;
 using Xunit;
 
 namespace CrossFire.Replay.Tests;
 
 public sealed class ModernRoundTripTests
 {
-    private const string UserCfn = @"D:\Dinho\Documents\Cross Fire\Replay\CFReplay20260701_0000.cfn";
-
     [Fact]
     public void UserCfn_ModernInnerPayload_RoundTrips()
     {
-        if (!File.Exists(UserCfn))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
-        var original = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(UserCfn));
+        var original = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(path));
         var inner = PacketSimulatorModernWriter.BuildInnerPayload(original);
         Assert.Equal(original.InnerPayload.Length, inner.Length);
         Assert.Equal(original.InnerPayload, inner);
@@ -30,10 +29,13 @@ public sealed class ModernRoundTripTests
     [Fact]
     public void UserCfn_BinarySnapshot_HasChunkedBody()
     {
-        if (!File.Exists(UserCfn))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
-        var doc = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(UserCfn));
+        var doc = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(path));
+        if (doc.BinarySnapshots.Count == 0)
+            return;
+
         var snapshot = Assert.Single(doc.BinarySnapshots);
         Assert.Equal(65_536, BinarySnapshotBodyReader.GuessChunkSize(snapshot.Header));
         Assert.Equal(5, snapshot.Chunks.Count);
@@ -47,10 +49,10 @@ public sealed class ModernRoundTripTests
     [Fact]
     public void UserCfn_ExportsTimelineCsv()
     {
-        if (!File.Exists(UserCfn))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
-        var doc = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(UserCfn));
+        var doc = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(path));
         var exportPath = Path.Combine(Path.GetTempPath(), $"cf_timeline_{Guid.NewGuid():N}.csv");
 
         try

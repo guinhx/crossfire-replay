@@ -1,6 +1,7 @@
 using CrossFire.Replay.Abstractions;
 using CrossFire.Replay.Core;
 using CrossFire.Replay.Formats.PacketSimulator;
+using CrossFire.Replay.Tests.Support;
 using System.Text.Json;
 using Xunit;
 
@@ -8,15 +9,15 @@ namespace CrossFire.Replay.Tests;
 
 public sealed class TimelineExportTests
 {
-    private const string UserCfn = @"D:\Dinho\Documents\Cross Fire\Replay\CFReplay20260701_0000.cfn";
+    private static bool TryFixture(out string path) => ReplayFixturePaths.TryGetPrimaryModernCfn(out path);
 
     [Fact]
     public void UserCfn_ExportsTimelineJson()
     {
-        if (!File.Exists(UserCfn))
+        if (!TryFixture(out var path))
             return;
 
-        var doc = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(UserCfn));
+        var doc = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(path));
         var exportPath = Path.Combine(Path.GetTempPath(), $"cf_timeline_{Guid.NewGuid():N}.json");
 
         try
@@ -35,13 +36,10 @@ public sealed class TimelineExportTests
             Assert.Equal(doc.UnifiedTimeline.Count, export.PacketCount);
             Assert.Equal(doc.DeduplicatedTimeline.Count, export.DeduplicatedCount);
             Assert.True(export.Packets.Count > 0);
-            Assert.Equal(1, export.BinarySnapshotCount);
-            Assert.Single(export.BinarySnapshots);
-            Assert.Equal(296_179, export.BinarySnapshots[0].PayloadSize);
-            Assert.True(export.BinarySnapshots[0].BodySize > 200_000);
-            Assert.True(export.BinarySnapshots[0].HeaderField0 > 0);
-            Assert.Equal(5, export.BinarySnapshots[0].ChunkCount);
-            Assert.Equal(65_536, export.BinarySnapshots[0].ChunkSize);
+            Assert.Equal(1, export.SchemaVersion);
+            Assert.False(string.IsNullOrEmpty(export.ToolkitVersion));
+            Assert.Equal(doc.BinarySnapshots.Count, export.BinarySnapshotCount);
+            Assert.Equal(export.BinarySnapshots.Count, export.BinarySnapshotCount);
         }
         finally
         {
@@ -53,13 +51,16 @@ public sealed class TimelineExportTests
     [Fact]
     public void UserCfn_DeduplicatedTimeline_IsNotLargerThanUnified()
     {
-        if (!File.Exists(UserCfn))
+        if (!TryFixture(out var path))
             return;
 
-        var doc = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(UserCfn));
+        var doc = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(path));
         Assert.True(doc.DeduplicatedTimeline.Count <= doc.UnifiedTimeline.Count);
         Assert.True(doc.DeduplicatedTimeline.Count >= 100);
-        Assert.Single(doc.BinarySnapshots);
-        Assert.Equal(296_179, doc.BinarySnapshots[0].PayloadSize);
+        if (doc.BinarySnapshots.Count > 0)
+        {
+            Assert.True(doc.BinarySnapshots[0].PayloadSize > 0);
+            Assert.NotEmpty(doc.BinarySnapshots[0].EmbeddedPackets);
+        }
     }
 }

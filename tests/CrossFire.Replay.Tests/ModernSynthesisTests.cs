@@ -1,22 +1,14 @@
 using CrossFire.Replay.Abstractions;
 using CrossFire.Replay.Core;
 using CrossFire.Replay.Formats.PacketSimulator;
+using CrossFire.Replay.Tests.Support;
 using Xunit;
 
 namespace CrossFire.Replay.Tests;
 
 public sealed class ModernSynthesisTests
 {
-    private const string ReplayFolder = @"D:\Dinho\Documents\Cross Fire\Replay";
-
-    public static IEnumerable<object[]> UserCfnFiles()
-    {
-        if (!Directory.Exists(ReplayFolder))
-            yield break;
-
-        foreach (var file in Directory.GetFiles(ReplayFolder, "*.cfn").OrderBy(static p => p, StringComparer.OrdinalIgnoreCase))
-            yield return new object[] { file };
-    }
+    public static IEnumerable<object[]> UserCfnFiles() => ReplayFixturePaths.CfnFileTheoryData();
 
     [Theory]
     [MemberData(nameof(UserCfnFiles))]

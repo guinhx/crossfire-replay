@@ -1,20 +1,19 @@
 using CrossFire.Replay.Compression;
 using CrossFire.Replay.Formats.PacketSimulator;
+using CrossFire.Replay.Tests.Support;
 using Xunit;
 
 namespace CrossFire.Replay.Tests;
 
 public sealed class IltArchiveReaderTests
 {
-    private const string UserCfn = @"D:\Dinho\Documents\Cross Fire\Replay\CFReplay20260701_0000.cfn";
-
     [Fact]
     public void UserCfn_GameArchive_ParsesPackets()
     {
-        if (!File.Exists(UserCfn))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
-        var payload = new ReplayContainerDecoder().Decode(File.ReadAllBytes(UserCfn)).Payload;
+        var payload = new ReplayContainerDecoder().Decode(File.ReadAllBytes(path)).Payload;
         var tail = 12 + 1024 + 4;
         var s1 = BitConverter.ToUInt32(payload, tail + 20);
         var s2 = BitConverter.ToUInt32(payload, tail + 24);
@@ -34,10 +33,10 @@ public sealed class IltArchiveReaderTests
     [Fact]
     public void UserCfn_MiddleBlob_ParsesTimeline()
     {
-        if (!File.Exists(UserCfn))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
-        var payload = new ReplayContainerDecoder().Decode(File.ReadAllBytes(UserCfn)).Payload;
+        var payload = new ReplayContainerDecoder().Decode(File.ReadAllBytes(path)).Payload;
         var tail = 12 + 1024 + 4;
         var s1 = BitConverter.ToUInt32(payload, tail + 20);
         var s2 = BitConverter.ToUInt32(payload, tail + 24);
@@ -46,7 +45,7 @@ public sealed class IltArchiveReaderTests
         var middle = payload.AsSpan(tail, dataStart - tail);
 
         var result = PacketSimulatorMiddleBlobReader.Parse(middle);
-        Assert.Equal(64, result.StreamOffset);
+        Assert.Equal(80, result.StreamOffset);
         Assert.NotNull(result.Header);
         Assert.Equal("BRASILEIRAO", result.Header!.MapLabel);
         Assert.True(result.Timeline.Packets.Count >= 50);

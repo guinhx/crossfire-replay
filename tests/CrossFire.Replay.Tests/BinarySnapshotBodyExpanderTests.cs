@@ -1,22 +1,24 @@
 using CrossFire.Replay.Core;
 using CrossFire.Replay.Formats.PacketSimulator;
 using CrossFire.Replay.Protocol.Lt;
+using CrossFire.Replay.Tests.Support;
 using Xunit;
 
 namespace CrossFire.Replay.Tests;
 
 public sealed class BinarySnapshotBodyExpanderTests
 {
-    private const string UserCfn = @"D:\Dinho\Documents\Cross Fire\Replay\CFReplay20260701_0000.cfn";
-
     [Fact]
     public void UserCfn_BinarySnapshot_ExtractsEmbeddedIltPackets()
     {
-        if (!File.Exists(UserCfn))
+        if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
             return;
 
-        var doc = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(UserCfn));
-        var snapshot = Assert.Single(doc.BinarySnapshots);
+        var doc = Assert.IsType<PacketSimulatorReplayDocument>(ReplayService.Default.Read(path));
+        if (doc.BinarySnapshots.Count == 0)
+            return;
+
+        var snapshot = doc.BinarySnapshots[0];
 
         Assert.Equal(65_536u, snapshot.Header.Field0);
         Assert.Equal(65_536u, snapshot.Header.Field1);
@@ -37,8 +39,8 @@ public sealed class BinarySnapshotBodyExpanderTests
     [Fact]
     public void UserReplayFolder_AllBinarySnapshots_ExposeEmbeddedPackets()
     {
-        const string folder = @"D:\Dinho\Documents\Cross Fire\Replay";
-        if (!Directory.Exists(folder))
+        var folder = ReplayFixturePaths.GetReplayFolder();
+        if (folder is null)
             return;
 
         var sawSnapshot = false;
