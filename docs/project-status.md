@@ -21,7 +21,7 @@ O catálogo de IDs (`EMessageIdCatalog`) cobre milhares de símbolos; **decoders
 
 A taxa de decode **varia por replay**: no fixture de referência usado nos testes de integração, a cobertura semântica chega a **~100%** dos pacotes ILT; em outros mapas, modos ou builds, pacotes ainda viram `LtUnknownDecoded`.
 
-**Impacto:** analytics sério (economia, heatmaps, coach) exige validar com replays reais da sua região e expandir decoders conforme necessário, ou consumir payloads brutos.
+**Impacto:** consumo semântico amplo exige validar com replays reais da sua região e expandir decoders conforme necessário, ou consumir payloads brutos.
 
 **Como medir hoje:**
 

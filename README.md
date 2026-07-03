@@ -2,7 +2,7 @@
 
 Biblioteca C# (.NET 8) para **ler e reescrever** replays do CrossFire — `.cfr` (eventos simplificados), `.cfn` / `.cfo` (PacketSimulator com ILT/Lithtech).
 
-Foco atual: **formato primeiro** (parse fiel, round-trip, decoders semânticos). Analytics, coach export e pipelines de produção ficam fora de escopo por enquanto.
+Foco atual: **formato primeiro** (parse fiel, round-trip, decoders semânticos).
 
 > Trabalho independente de engenharia reversa. Não é oficial Smilegate / CrossFire.  
 > Veja [CREDITS.md](CREDITS.md) e [LICENSE](LICENSE) — uso comercial e fork são permitidos **desde que os créditos permaneçam visíveis**.

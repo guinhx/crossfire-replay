@@ -38,7 +38,7 @@
 
 ## Princípios de design
 
-1. **Formato primeiro** — round-trip byte-a-byte antes de analytics.
+1. **Formato primeiro** — round-trip byte-a-byte como base estável para consumo downstream.
 2. **Decode tolerante** — `LtUnknownDecoded` + catálogo de nomes nativos.
 3. **Testes com fixtures reais opcionais** — não commitar replays do usuário.
 4. **Sem dependência de código proprietário** no repo distribuível.

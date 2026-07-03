@@ -30,7 +30,7 @@ Obrigado por ajudar a melhorar leitura de replays CrossFire de forma aberta e é
 |----------|-------------|
 | **Bug report** | Crash, parse error, round-trip quebrado, teste falhando |
 | **Decode / format gap** | ID ILT conhecido mas não decodificado; layout novo; bytes estranhos |
-| **Feature request** | Nova API, export, tooling (fora de escopo analytics ainda ok como discussão) |
+| **Feature request** | Nova API, export, tooling |
 
 ### Informações que aceleram o diagnóstico
 

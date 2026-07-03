@@ -26,10 +26,6 @@ assignees: ''
 - [ ] Documentação
 - [ ] Outro:
 
-## Fora de escopo conhecido (por enquanto)
-
-Analytics de coach, export Team Liquid, API HTTP — ainda não são foco; se sua ideia se aproxima, explique por que deveria entrar antes.
-
 ## Checklist
 
 - [ ] Li [docs/README.md](../blob/main/docs/README.md) e [dotnet-api.md](../blob/main/docs/getting-started/dotnet-api.md)
