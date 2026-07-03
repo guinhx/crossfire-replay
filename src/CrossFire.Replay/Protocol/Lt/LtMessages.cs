@@ -377,3 +377,53 @@ public sealed record LtScDamageSiteDecoded(
 public sealed record LtScStageLightNodeClearDecoded(
     byte NodeIndex,
     bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScStageLightNodeClear);
+
+public sealed record LtCsFirstUpdateDecoded() : LtDecodedMessage(EMessageId.MsgCsFirstUpdate);
+
+public sealed record LtScAiAckCanDefuseC4Decoded(bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScAiAckCanDefuseC4);
+
+public sealed record LtScAiScoreDecoded(
+    ushort Category,
+    uint PrimaryScore,
+    uint SecondaryScore,
+    uint Rank,
+    ushort TrailingValue,
+    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScAiScore);
+
+public sealed record LtScDamageCalculationRequestDecoded(
+    ushort RequestKind,
+    uint Reserved,
+    uint Timestamp,
+    ushort FieldA,
+    ushort FieldB,
+    ushort FieldC,
+    float ParamA,
+    float ParamB,
+    uint Flag,
+    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScDamageCalculationRequest);
+
+public sealed record LtScSheepWantedListDecoded(
+    byte WantedCount,
+    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScSheepWantedList);
+
+public sealed record LtCsRappelVelAndRotEntryDecoded(
+    uint Timestamp,
+    ushort FieldA,
+    float PosX,
+    float PosY,
+    float PosZ,
+    uint FieldB,
+    uint FieldC,
+    byte FieldD);
+
+public sealed record LtCsRappelVelAndRotDecoded(
+    IReadOnlyList<LtCsRappelVelAndRotEntryDecoded> Entries) : LtDecodedMessage(EMessageId.MsgCsRappelVelAndRot);
+
+public sealed record LtScPresentTeamAceUserDecoded(
+    uint FieldA,
+    uint FieldB,
+    uint Timestamp,
+    ushort FieldC,
+    ushort FieldD,
+    uint FieldE,
+    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScPresentTeamAceUser);

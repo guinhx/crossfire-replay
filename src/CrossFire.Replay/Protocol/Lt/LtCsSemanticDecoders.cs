@@ -212,4 +212,91 @@ internal static class LtCsSemanticDecoders
     var header = LtCsPacketReader.ReadHeader(reader);
     return new LtCsPacketHeaderFields(header.DummyData, header.PacketSeqIndex);
   }
+
+  public static LtDecodedMessage? TryDecodeFirstUpdate(ReadOnlySpan<byte> payload)
+  {
+    if (payload.Length < 2)
+      return null;
+
+    try
+    {
+      var reader = new LtBitstreamReader(payload);
+      if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgCsFirstUpdate)
+        return null;
+
+      return new LtCsFirstUpdateDecoded();
+    }
+    catch (InvalidOperationException)
+    {
+      return null;
+    }
+  }
+
+  private const int RappelVelAndRotEntryBytes = 37;
+
+  public static LtDecodedMessage? TryDecodeRappelVelAndRot(ReadOnlySpan<byte> payload)
+  {
+    if (payload.Length < RappelVelAndRotEntryBytes)
+      return null;
+
+    try
+    {
+      var reader = new LtBitstreamReader(payload);
+      if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgCsRappelVelAndRot)
+        return null;
+
+      var entries = new List<LtCsRappelVelAndRotEntryDecoded>();
+      foreach (var offset in FindMessageIdOffsets(payload, EMessageId.MsgCsRappelVelAndRot))
+      {
+        if (offset + RappelVelAndRotEntryBytes > payload.Length)
+          continue;
+
+        var slice = payload.Slice(offset, RappelVelAndRotEntryBytes);
+        if (TryDecodeRappelVelAndRotEntry(slice, out var entry))
+          entries.Add(entry);
+      }
+
+      return entries.Count > 0 ? new LtCsRappelVelAndRotDecoded(entries) : null;
+    }
+    catch (InvalidOperationException)
+    {
+      return null;
+    }
+  }
+
+  private static bool TryDecodeRappelVelAndRotEntry(ReadOnlySpan<byte> slice, out LtCsRappelVelAndRotEntryDecoded entry)
+  {
+    entry = default!;
+    if (slice.Length < RappelVelAndRotEntryBytes)
+      return false;
+
+    if (BitConverter.ToUInt16(slice) != (ushort)EMessageId.MsgCsRappelVelAndRot)
+      return false;
+
+    entry = new LtCsRappelVelAndRotEntryDecoded(
+      BitConverter.ToUInt32(slice.Slice(2, 4)),
+      BitConverter.ToUInt16(slice.Slice(6, 2)),
+      BitConverter.ToSingle(slice.Slice(8, 4)),
+      BitConverter.ToSingle(slice.Slice(12, 4)),
+      BitConverter.ToSingle(slice.Slice(16, 4)),
+      BitConverter.ToUInt32(slice.Slice(20, 4)),
+      BitConverter.ToUInt32(slice.Slice(24, 4)),
+      slice[28]);
+    return true;
+  }
+
+  private static List<int> FindMessageIdOffsets(ReadOnlySpan<byte> payload, EMessageId messageId)
+  {
+    var lo = (byte)((ushort)messageId & 0xFF);
+    var hi = (byte)((ushort)messageId >> 8);
+    var offsets = new List<int>();
+
+    for (var i = 0; i < payload.Length - 1; i++)
+    {
+      if (payload[i] == lo && payload[i + 1] == hi)
+        offsets.Add(i);
+    }
+
+    return offsets;
+  }
 }

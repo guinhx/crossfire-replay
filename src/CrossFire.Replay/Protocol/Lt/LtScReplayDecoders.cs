@@ -1,3 +1,5 @@
+using System.Buffers.Binary;
+
 namespace CrossFire.Replay.Protocol.Lt;
 
 internal static class LtScReplayDecoders
@@ -274,7 +276,7 @@ internal static class LtScReplayDecoders
 
     public static LtDecodedMessage? TryDecodeDamageSite(ReadOnlySpan<byte> payload)
     {
-        if (payload.Length < 4)
+        if (payload.Length < 2)
             return null;
 
         try
@@ -282,6 +284,9 @@ internal static class LtScReplayDecoders
             var reader = new LtBitstreamReader(payload);
             if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScDamageSite)
                 return null;
+
+            if (payload.Length <= 4)
+                return new LtScDamageSiteDecoded(0, Array.Empty<LtScDamageSiteEntryDecoded>(), payload.Length > 2);
 
             if (payload.Length <= 8)
                 return new LtScDamageSiteDecoded(0, Array.Empty<LtScDamageSiteEntryDecoded>(), reader.HasRemaining);
@@ -298,6 +303,125 @@ internal static class LtScReplayDecoders
             }
 
             return new LtScDamageSiteDecoded(header, entries, reader.HasRemaining);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    public static LtDecodedMessage? TryDecodeAiAckCanDefuseC4(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 2)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScAiAckCanDefuseC4)
+                return null;
+
+            return new LtScAiAckCanDefuseC4Decoded(reader.HasRemaining);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    public static LtDecodedMessage? TryDecodeAiScore(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 14)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScAiScore)
+                return null;
+
+            var category = reader.ReadUInt16();
+            var primaryScore = reader.ReadUInt32();
+            var secondaryScore = reader.ReadUInt32();
+            var rank = reader.ReadUInt32();
+            ushort trailingValue = 0;
+            if (payload.Length >= 46)
+                trailingValue = BitConverter.ToUInt16(payload.Slice(44, 2));
+
+            return new LtScAiScoreDecoded(category, primaryScore, secondaryScore, rank, trailingValue, payload.Length > 46);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    public static LtDecodedMessage? TryDecodeDamageCalculationRequest(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 32)
+            return null;
+
+        try
+        {
+            if (BitConverter.ToUInt16(payload) != (ushort)EMessageId.MsgScDamageCalculationRequest)
+                return null;
+
+            return new LtScDamageCalculationRequestDecoded(
+                payload[4],
+                BinaryPrimitives.ReadUInt32LittleEndian(payload.Slice(5, 4)),
+                BinaryPrimitives.ReadUInt32LittleEndian(payload.Slice(8, 4)),
+                BitConverter.ToUInt16(payload.Slice(12, 2)),
+                BitConverter.ToUInt16(payload.Slice(14, 2)),
+                BitConverter.ToUInt16(payload.Slice(16, 2)),
+                BitConverter.ToSingle(payload.Slice(18, 4)),
+                BitConverter.ToSingle(payload.Slice(22, 4)),
+                BitConverter.ToUInt32(payload.Slice(26, 4)),
+                payload.Length > 30);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+    }
+
+    public static LtDecodedMessage? TryDecodeSheepWantedList(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 3)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScSheepWantedList)
+                return null;
+
+            var wantedCount = reader.IsEmpty ? (byte)0 : reader.ReadUInt8();
+            return new LtScSheepWantedListDecoded(wantedCount, reader.HasRemaining);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    public static LtDecodedMessage? TryDecodePresentTeamAceUser(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 32)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScPresentTeamAceUser)
+                return null;
+
+            var fieldA = reader.ReadUInt32();
+            var fieldB = reader.ReadUInt32();
+            var timestamp = reader.ReadUInt32();
+            var fieldC = reader.ReadUInt16();
+            var fieldD = reader.ReadUInt16();
+            var fieldE = reader.ReadUInt32();
+            return new LtScPresentTeamAceUserDecoded(fieldA, fieldB, timestamp, fieldC, fieldD, fieldE, payload.Length > 32);
         }
         catch (InvalidOperationException)
         {

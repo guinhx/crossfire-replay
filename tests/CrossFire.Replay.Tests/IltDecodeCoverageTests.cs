@@ -70,6 +70,6 @@ public sealed class IltDecodeCoverageTests
         Assert.True(report.TotalPackets > 0);
         Assert.True(report.WithMessageId > 0);
         Assert.True(report.SemanticallyDecoded > 0);
-        Assert.True(report.UnknownDecoded > 0);
+        Assert.True(report.SemanticPacketRatio >= 0.95);
     }
 }

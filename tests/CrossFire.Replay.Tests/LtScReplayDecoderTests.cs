@@ -237,6 +237,74 @@ public sealed class LtScReplayDecoderTests
     }
 
     [Fact]
+    public void DamageSite_DecodesMinimalPayload()
+    {
+        var payload = Convert.FromHexString("0001");
+        Assert.IsType<LtScDamageSiteDecoded>(LtMessageReader.TryDecode(payload));
+    }
+
+    [Fact]
+    public void FirstUpdate_DecodesMinimalPayload()
+    {
+        Assert.IsType<LtCsFirstUpdateDecoded>(LtMessageReader.TryDecode(Convert.FromHexString("1600")));
+    }
+
+    [Fact]
+    public void AiAckCanDefuseC4_DecodesMinimalPayload()
+    {
+        Assert.IsType<LtScAiAckCanDefuseC4Decoded>(LtMessageReader.TryDecode(Convert.FromHexString("6C00")));
+    }
+
+    [Fact]
+    public void AiScore_DecodesFixtureSample()
+    {
+        var payload = Convert.FromHexString("6D005D00CA650100037D010005000000000000000000000000000000000000000000000000000000000000000001390000000000");
+        var decoded = Assert.IsType<LtScAiScoreDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.Equal(93, decoded.Category);
+        Assert.Equal(5u, decoded.Rank);
+    }
+
+    [Fact]
+    public void RappelVelAndRot_DecodesBundledFixtureSample()
+    {
+        var payload = Convert.FromHexString("5901B2250D32000C0B47493E4C785A404300007A4A0000710000000F0000005901B2250D32000227301D3D31892DC04500007B4A00007B000000100000005901B2250D360010A0E489B7322B420AD7FB49007C4A0000710000000F000000");
+        var decoded = Assert.IsType<LtCsRappelVelAndRotDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.InRange(decoded.Entries.Count, 2, 3);
+    }
+
+    [Fact]
+    public void DamageCalculationRequest_PayloadBytes()
+    {
+        var payload = Convert.FromHexString("A100000015000000");
+        Assert.Equal(0x15, payload[4]);
+    }
+
+    [Fact]
+    public void DamageCalculationRequest_DecodesFixtureSample()
+    {
+        var payload = Convert.FromHexString("A100000015000000ED24B2250D39001300BD0124AF0E563C3FFFFFFF0100000000973B0000600000000C000000ED24B2250DB90031024D2D626F6E6500983B00");
+        var decoded = Assert.IsType<LtScDamageCalculationRequestDecoded>(
+            LtScReplayDecoders.TryDecodeDamageCalculationRequest(payload));
+        Assert.Equal((ushort)21, decoded.RequestKind);
+        Assert.Equal(0x25B224EDu, decoded.Timestamp);
+    }
+
+    [Fact]
+    public void SheepWantedList_DecodesFixtureSample()
+    {
+        Assert.IsType<LtScSheepWantedListDecoded>(LtMessageReader.TryDecode(Convert.FromHexString("E703000000")));
+    }
+
+    [Fact]
+    public void PresentTeamAceUserPeek_RejectsHugePayload()
+    {
+        var payload = new byte[512];
+        payload[0] = 0xBA;
+        payload[1] = 0x07;
+        Assert.False(LtMessageReader.TryPeekMessageId(payload, out _));
+    }
+
+    [Fact]
     public void UserFixture_DecodesTopUnknownIds()
     {
         if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
@@ -271,6 +339,12 @@ public sealed class LtScReplayDecoderTests
                      report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgMscNone4),
                      report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScNjAiFireStart),
                      report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScPlayerLevelUp),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgCsFirstUpdate),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgCsRappelVelAndRot),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScAiAckCanDefuseC4),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScAiScore),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScDamageCalculationRequest),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScSheepWantedList),
                  })
         {
             if (row is not null)
