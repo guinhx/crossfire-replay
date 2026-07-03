@@ -294,3 +294,21 @@ public sealed record LtScDefenceTowerFireDecoded(
     float AimX,
     float AimY,
     uint State) : LtDecodedMessage(EMessageId.MsgScAi2ModeDefenceTowerFire);
+
+public sealed record LtScBossReviveEntryDecoded(
+    uint Timestamp,
+    uint FieldA,
+    uint FieldB,
+    uint EventId,
+    uint StateA,
+    uint StateB);
+
+public sealed record LtScBossReviveDecoded(
+    IReadOnlyList<LtScBossReviveEntryDecoded> Entries) : LtDecodedMessage(EMessageId.MsgScBossRevive);
+
+public sealed record LtScArcadiaCoreSwitchStateDecoded(
+    ushort CoreObjectId,
+    byte EventKind,
+    uint Timestamp,
+    byte SubState,
+    int PayloadLength) : LtDecodedMessage(EMessageId.MsgScArcadiaCoreSwitchState);

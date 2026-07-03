@@ -105,6 +105,8 @@ public static class LtMessageReader
                 EMessageId.MsgCsLandingState => LtCsSemanticDecoders.TryDecodeLandingState(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgScIngameItemDropped => LtScReplayDecoders.TryDecodeIngameItemDropped(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgScAi2ModeDefenceTowerFire => LtScReplayDecoders.TryDecodeDefenceTowerFire(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScBossRevive => LtScReplayDecoders.TryDecodeBossRevive(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScArcadiaCoreSwitchState => LtScReplayDecoders.TryDecodeArcadiaCoreSwitchState(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 _ => new LtUnknownDecoded(id, payload.Length),
             };
         }

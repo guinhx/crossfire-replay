@@ -21,6 +21,8 @@ public sealed class LtBitstreamReader
     public int BitPosition => _bitPos;
     public bool IsEmpty => _bytePos >= _data.Length;
     public bool HasRemaining => _bitPos != 0 || _bytePos < _data.Length;
+    public int RemainingBits =>
+        _bytePos >= _data.Length ? 0 : (_data.Length - _bytePos) * 8 - _bitPos;
 
     public bool ReadBoolean() => ReadBits(1) != 0;
     public byte ReadUInt8() => (byte)ReadBits(8);

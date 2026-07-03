@@ -67,4 +67,5 @@ public enum EMessageId : ushort
     MsgScIngameItemDropped = 0x75,
     MsgScAi2ModeDefenceTowerFire = 0x37A,
     MsgScBossRevive = 0x30C,
+    MsgScArcadiaCoreSwitchState = 0x800,
 }

@@ -393,20 +393,29 @@ internal static class LtSemanticDecoders
             var rapidChangeBuff = reader.ReadGuardedSingle();
             var changeWeaponState = reader.ReadGuardedInt32();
             var motion = reader.ReadUInt8();
+            var customSetBits = SetWeaponSlotWeaponCount * SetWeaponSlotCustomSetPerBag * 32;
             var customSets = new List<IReadOnlyList<LtVvipWeaponCustomColor>>(SetWeaponSlotWeaponCount);
-            for (var bag = 0; bag < SetWeaponSlotWeaponCount; bag++)
+            if (reader.RemainingBits >= customSetBits)
             {
-                var slots = new LtVvipWeaponCustomColor[SetWeaponSlotCustomSetPerBag];
-                for (var slot = 0; slot < SetWeaponSlotCustomSetPerBag; slot++)
+                for (var bag = 0; bag < SetWeaponSlotWeaponCount; bag++)
                 {
-                    var red = reader.ReadUInt8();
-                    var blue = reader.ReadUInt8();
-                    var green = reader.ReadUInt8();
-                    var material = reader.ReadUInt8();
-                    slots[slot] = new LtVvipWeaponCustomColor(red, green, blue, material);
-                }
+                    var slots = new LtVvipWeaponCustomColor[SetWeaponSlotCustomSetPerBag];
+                    for (var slot = 0; slot < SetWeaponSlotCustomSetPerBag; slot++)
+                    {
+                        var red = reader.ReadUInt8();
+                        var blue = reader.ReadUInt8();
+                        var green = reader.ReadUInt8();
+                        var material = reader.ReadUInt8();
+                        slots[slot] = new LtVvipWeaponCustomColor(red, green, blue, material);
+                    }
 
-                customSets.Add(slots);
+                    customSets.Add(slots);
+                }
+            }
+            else
+            {
+                for (var bag = 0; bag < SetWeaponSlotWeaponCount; bag++)
+                    customSets.Add(Array.Empty<LtVvipWeaponCustomColor>());
             }
 
             var hasExtended = reader.HasRemaining;
