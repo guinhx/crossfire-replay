@@ -4,6 +4,7 @@ internal static class LtScReplayDecoders
 {
     private const int BossReviveMinEntryBytes = 24;
     private const int ArcadiaSwitchStateMinBytes = 125;
+    private const int ForceLeavePollStartMinEntryBytes = 14;
 
     public static LtDecodedMessage? TryDecodeIngameItemDropped(ReadOnlySpan<byte> payload)
     {
@@ -186,6 +187,56 @@ internal static class LtScReplayDecoders
         }
     }
 
+    public static LtDecodedMessage? TryDecodeMscNone4(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 2)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgMscNone4)
+                return null;
+
+            return new LtMscNone4Decoded();
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    public static LtDecodedMessage? TryDecodeForceLeavePollStart(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < ForceLeavePollStartMinEntryBytes)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScForceLeavePollStart)
+                return null;
+
+            var entries = new List<LtScForceLeavePollStartEntryDecoded>();
+            foreach (var offset in FindMessageIdOffsets(payload, EMessageId.MsgScForceLeavePollStart))
+            {
+                var end = FindNextMessageIdOffset(payload, EMessageId.MsgScForceLeavePollStart, offset + 2);
+                if (end < 0)
+                    end = payload.Length;
+
+                var slice = payload.Slice(offset, end - offset);
+                if (TryDecodeForceLeavePollStartEntry(slice, out var entry))
+                    entries.Add(entry);
+            }
+
+            return entries.Count > 0 ? new LtScForceLeavePollStartDecoded(entries) : null;
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
     public static LtDecodedMessage? TryDecodeBossRevive(ReadOnlySpan<byte> payload)
     {
         if (payload.Length < BossReviveMinEntryBytes)
@@ -245,6 +296,32 @@ internal static class LtScReplayDecoders
         catch (InvalidOperationException)
         {
             return null;
+        }
+    }
+
+    private static bool TryDecodeForceLeavePollStartEntry(
+        ReadOnlySpan<byte> slice,
+        out LtScForceLeavePollStartEntryDecoded entry)
+    {
+        entry = default!;
+        if (slice.Length < ForceLeavePollStartMinEntryBytes)
+            return false;
+
+        try
+        {
+            var reader = new LtBitstreamReader(slice);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScForceLeavePollStart)
+                return false;
+
+            var fieldA = reader.ReadUInt32();
+            var fieldB = reader.ReadUInt32();
+            var timestamp = reader.ReadUInt32();
+            entry = new LtScForceLeavePollStartEntryDecoded(fieldA, fieldB, timestamp);
+            return true;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
         }
     }
 

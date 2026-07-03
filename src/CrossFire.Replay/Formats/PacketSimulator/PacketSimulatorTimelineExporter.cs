@@ -314,6 +314,8 @@ public static class PacketSimulatorTimelineExporter
                 ["stateB"] = tower.StateB,
             },
             LtScBossReviveDecoded boss => new() { ["entryCount"] = boss.Entries.Count },
+            LtScForceLeavePollStartDecoded poll => new() { ["entryCount"] = poll.Entries.Count },
+            LtMscNone4Decoded => new() { ["marker"] = true },
             LtScArcadiaCoreSwitchStateDecoded arcadia => new()
             {
                 ["coreObjectId"] = arcadia.CoreObjectId,

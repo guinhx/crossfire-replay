@@ -56,6 +56,8 @@ public static class LtMessageReader
     private static int GetMaxPlausiblePayloadBytes(EMessageId id) => id switch
     {
         EMessageId.MsgCsReqLuckyBoom => 24,
+        EMessageId.MsgScAllScores => 1024,
+        EMessageId.MsgCsBoomGrenade => 64,
         EMessageId.MsgCsReqForceChangeWeapon => 64,
         EMessageId.MsgCsAmmoReload => 64,
         EMessageId.MsgCsScoreInfoOnOff => 64,
@@ -81,7 +83,7 @@ public static class LtMessageReader
 
     private static bool ValidateBombSitesPeek(LtBitstreamReader reader, ReadOnlySpan<byte> payload)
     {
-        if (payload.Length < 3)
+        if (payload.Length is < 3 or > 256)
             return false;
 
         var count = reader.ReadUInt8();
@@ -140,6 +142,8 @@ public static class LtMessageReader
                 EMessageId.MsgScCheatScaleDown => LtScReplayDecoders.TryDecodeCheatScaleDown(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgScAddTimeItem => LtScReplayDecoders.TryDecodeAddTimeItem(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgScDamageSiteState => LtScReplayDecoders.TryDecodeDamageSiteState(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScForceLeavePollStart => LtScReplayDecoders.TryDecodeForceLeavePollStart(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgMscNone4 => LtScReplayDecoders.TryDecodeMscNone4(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 _ => new LtUnknownDecoded(id, payload.Length),
             };
         }

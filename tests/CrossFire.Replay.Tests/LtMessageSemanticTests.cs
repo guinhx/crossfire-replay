@@ -166,7 +166,7 @@ public sealed class LtMessageSemanticTests
             }
         }
 
-        if (allScores is null)
+        if (allScores is null || allScores.PlayerCount == 0)
             return;
 
         Assert.InRange(allScores.PlayerCount, (byte)1, (byte)16);

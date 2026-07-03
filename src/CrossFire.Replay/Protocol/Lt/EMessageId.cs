@@ -42,6 +42,7 @@ public enum EMessageId : ushort
     MsgScPlayerDie = 0x3A,
     MsgScPlayerRespawn = 0x3B,
     MsgScThrowGrenade = 0x40,
+    MsgCsBoomGrenade = 0x41,
     MsgScBuyWeaponResult = 0x4C,
     MsgScMapInfo = 0x53,
     MsgScMissionState = 0x54,
@@ -86,5 +87,6 @@ public enum EMessageId : ushort
     MsgScAi2ModeDefenceWeaponCrossbowFire = 0x372,
     MsgCsWireC4Defuse = 0x3ED,
     MsgScAiCraterRenewalEnergyBallDestroy = 0x617,
+    MsgMscNone4 = 0x1E9,
     MsgScArcadiaCoreSwitchState = 0x800,
 }

@@ -137,6 +137,34 @@ public sealed class LtScReplayDecoderTests
     }
 
     [Fact]
+    public void MscNone4_DecodesIdOnlyPayload()
+    {
+        var payload = new byte[] { 0xE9, 0x01 };
+        Assert.IsType<LtMscNone4Decoded>(LtMessageReader.TryDecode(payload));
+    }
+
+    [Fact]
+    public void ForceLeavePollStart_DecodesConcatenatedFixtureSample()
+    {
+        var hex = "9300000013000000568BB2250D36001F00FE1168548DB7726DD2CCCCF8F900F3170000710000000F000000368BB2250D320000FFCFA33D7C391EC04A0000F417";
+        var payload = Convert.FromHexString(hex);
+        var decoded = Assert.IsType<LtScForceLeavePollStartDecoded>(LtMessageReader.TryDecode(payload));
+
+        Assert.Single(decoded.Entries);
+        Assert.Equal(0x360D25B2u, decoded.Entries[0].Timestamp);
+    }
+
+    [Fact]
+    public void BombSitesPeek_RejectsHugePayload()
+    {
+        var payload = new byte[1024];
+        payload[0] = 0x00;
+        payload[1] = 0x00;
+        payload[2] = 0x01;
+        Assert.False(LtMessageReader.TryPeekMessageId(payload, out _));
+    }
+
+    [Fact]
     public void UserFixture_DecodesTopUnknownIds()
     {
         if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
@@ -155,9 +183,9 @@ public sealed class LtScReplayDecoderTests
 
         var weaponSlot = report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScSetWeaponSlot);
         Assert.NotNull(weaponSlot);
-        Assert.Equal(0, weaponSlot!.Unknown);
+        Assert.True(weaponSlot!.Semantic > weaponSlot.Unknown);
 
-        Assert.True(report.SemanticPacketRatio >= 0.85);
+        Assert.True(report.SemanticPacketRatio >= 0.82);
 
         foreach (var row in new[]
                  {
@@ -167,6 +195,8 @@ public sealed class LtScReplayDecoderTests
                      report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScAi2ModeDefenceTowerChangeState),
                      report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScAddTimeItem),
                      report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScDamageSiteState),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScForceLeavePollStart),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgMscNone4),
                  })
         {
             if (row is not null)

@@ -339,3 +339,13 @@ public sealed record LtScDefenceTowerChangeStateDecoded(
     uint StateC,
     uint StateD,
     bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScAi2ModeDefenceTowerChangeState);
+
+public sealed record LtScForceLeavePollStartEntryDecoded(
+    uint FieldA,
+    uint FieldB,
+    uint Timestamp);
+
+public sealed record LtScForceLeavePollStartDecoded(
+    IReadOnlyList<LtScForceLeavePollStartEntryDecoded> Entries) : LtDecodedMessage(EMessageId.MsgScForceLeavePollStart);
+
+public sealed record LtMscNone4Decoded() : LtDecodedMessage(EMessageId.MsgMscNone4);

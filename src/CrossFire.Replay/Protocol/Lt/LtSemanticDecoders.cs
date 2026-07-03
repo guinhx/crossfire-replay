@@ -53,7 +53,7 @@ internal static class LtSemanticDecoders
                 return null;
 
             var teamCount = reader.ReadUInt8();
-            if (teamCount > 50)
+            if (teamCount is 0 or > 8)
                 return null;
 
             var teamScores = new ushort[teamCount];
