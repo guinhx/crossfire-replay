@@ -361,7 +361,7 @@ public static class IltPacketArchiveReader
             return false;
 
         var payload = archive.Slice(offset + 8, (int)ReadUInt32(archive, offset));
-        return payload.Length >= 2 && LtMessageReader.TryPeekMessageId(payload, out _);
+        return payload.Length >= 2 && LtMessageReader.TryPeekMessageId(payload, out _, strictPayloadLimits: false);
     }
 
     private static bool IsValidTimestampPacketAt(ReadOnlySpan<byte> archive, int offset, int maxPayloadSize = MaxPacketPayloadSize)
@@ -471,7 +471,7 @@ public static class IltPacketArchiveReader
         LtDecodedMessage? decoded = null;
         try
         {
-            if (LtMessageReader.TryPeekMessageId(payload, out var id))
+            if (LtMessageReader.TryPeekMessageId(payload, out var id, strictPayloadLimits: true))
                 messageId = id;
             decoded = LtMessageReader.TryDecode(payload);
         }
@@ -512,7 +512,7 @@ public static class IltPacketArchiveReader
         var payload = archive.Slice(cursor, (int)size).ToArray();
         cursor += (int)size;
 
-        EMessageId? messageId = LtMessageReader.TryPeekMessageId(payload, out var id) ? id : null;
+        EMessageId? messageId = LtMessageReader.TryPeekMessageId(payload, out var id, strictPayloadLimits: true) ? id : null;
 
         packet = new SpecialEffectPacketRecord
         {

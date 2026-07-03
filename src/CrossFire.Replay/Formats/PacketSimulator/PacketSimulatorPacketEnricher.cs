@@ -44,11 +44,11 @@ public static class PacketSimulatorPacketEnricher
 
     private static TimestampPacketRecord EnrichPacket(TimestampPacketRecord packet)
     {
-        var messageId = packet.MessageId;
-        if (!messageId.HasValue && LtMessageReader.TryPeekMessageId(packet.Payload, out var peeked))
+        EMessageId? messageId = null;
+        if (LtMessageReader.TryPeekMessageId(packet.Payload, out var peeked))
             messageId = peeked;
 
-        var decoded = packet.Decoded ?? (messageId.HasValue ? LtMessageReader.TryDecode(packet.Payload) : null);
+        var decoded = messageId.HasValue ? LtMessageReader.TryDecode(packet.Payload) : null;
         return new TimestampPacketRecord
         {
             PayloadSize = packet.PayloadSize,

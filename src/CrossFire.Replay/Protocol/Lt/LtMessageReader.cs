@@ -1,10 +1,15 @@
 using CrossFire.Replay.Protocol;
 
+using CrossFire.Replay.Protocol;
+
 namespace CrossFire.Replay.Protocol.Lt;
 
 public static class LtMessageReader
 {
-    public static bool TryPeekMessageId(ReadOnlySpan<byte> payload, out EMessageId messageId)
+    public static bool TryPeekMessageId(ReadOnlySpan<byte> payload, out EMessageId messageId) =>
+        TryPeekMessageId(payload, out messageId, strictPayloadLimits: true);
+
+    public static bool TryPeekMessageId(ReadOnlySpan<byte> payload, out EMessageId messageId, bool strictPayloadLimits)
     {
         messageId = default;
         if (payload.Length < 2)
@@ -17,7 +22,7 @@ public static class LtMessageReader
             if (!EMessageIdCatalog.IsPlausible(id))
                 return false;
 
-            if (!ValidateMessagePeek((EMessageId)id, reader, payload))
+            if (!ValidateMessagePeek((EMessageId)id, reader, payload, strictPayloadLimits))
                 return false;
 
             messageId = (EMessageId)id;
@@ -29,16 +34,17 @@ public static class LtMessageReader
         }
     }
 
-    private static bool ValidateMessagePeek(EMessageId id, LtBitstreamReader reader, ReadOnlySpan<byte> payload) =>
+    private static bool ValidateMessagePeek(EMessageId id, LtBitstreamReader reader, ReadOnlySpan<byte> payload, bool strictPayloadLimits) =>
         id switch
         {
             EMessageId.MsgScBombSites => ValidateBombSitesPeek(reader, payload),
-            _ => ValidateGenericPeek(id, payload),
+            EMessageId.MsgScAllScores => ValidateAllScoresPeek(payload),
+            _ => ValidateGenericPeek(id, payload, strictPayloadLimits),
         };
 
-    private static bool ValidateGenericPeek(EMessageId id, ReadOnlySpan<byte> payload)
+    private static bool ValidateGenericPeek(EMessageId id, ReadOnlySpan<byte> payload, bool strictPayloadLimits)
     {
-        if (payload.Length > GetMaxPlausiblePayloadBytes(id))
+        if (strictPayloadLimits && payload.Length > GetMaxPlausiblePayloadBytes(id))
             return false;
 
         if (payload.Length <= 512)
@@ -57,6 +63,10 @@ public static class LtMessageReader
     {
         EMessageId.MsgCsReqLuckyBoom => 24,
         EMessageId.MsgScAllScores => 1024,
+        EMessageId.MsgScNjAiFireStart => 64,
+        EMessageId.MsgScPlayerLevelUp => 64,
+        EMessageId.MsgScStageLightNodeClear => 32,
+        EMessageId.MsgScBombSites => 256,
         EMessageId.MsgCsBoomGrenade => 64,
         EMessageId.MsgCsReqForceChangeWeapon => 64,
         EMessageId.MsgCsAmmoReload => 64,
@@ -90,7 +100,35 @@ public static class LtMessageReader
             return false;
 
         var count = reader.ReadUInt8();
-        return count is >= 1 and <= 5;
+        if (count is < 1 or > 5)
+            return false;
+
+        if (payload.Length < 4)
+            return false;
+
+        if (payload[3] > 5)
+            return false;
+
+        var minFull = 3 + count * (1 + 12 + 12);
+        if (payload.Length >= minFull)
+            return true;
+
+        if (payload.Length < 3 + count)
+            return false;
+
+        if (count > 1 && payload.Length < 3 + count * 10)
+            return false;
+
+        return true;
+    }
+
+    private static bool ValidateAllScoresPeek(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 4)
+            return false;
+
+        var teamCount = payload[2];
+        return teamCount is >= 1 and <= 8;
     }
 
     public static LtDecodedMessage? TryDecode(ReadOnlySpan<byte> payload)
@@ -147,6 +185,10 @@ public static class LtMessageReader
                 EMessageId.MsgScDamageSiteState => LtScReplayDecoders.TryDecodeDamageSiteState(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgScForceLeavePollStart => LtScReplayDecoders.TryDecodeForceLeavePollStart(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 EMessageId.MsgMscNone4 => LtScReplayDecoders.TryDecodeMscNone4(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScDamageSite => LtScReplayDecoders.TryDecodeDamageSite(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScNjAiFireStart => LtScReplayDecoders.TryDecodeNjAiFireStart(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScPlayerLevelUp => LtScReplayDecoders.TryDecodePlayerLevelUp(payload) ?? new LtUnknownDecoded(id, payload.Length),
+                EMessageId.MsgScStageLightNodeClear => LtScReplayDecoders.TryDecodeStageLightNodeClear(payload) ?? new LtUnknownDecoded(id, payload.Length),
                 _ => new LtUnknownDecoded(id, payload.Length),
             };
         }
@@ -307,17 +349,62 @@ public static class LtMessageReader
             if (count is 0 or > 5)
                 return false;
 
+            var minFull = 3 + count * (1 + 12 + 12);
+            if (payload.Length >= minFull)
+            {
+                var sites = new List<LtBombSiteInfo>(count);
+                for (var i = 0; i < count; i++)
+                {
+                    var area = reader.ReadUInt8();
+                    var pos = reader.ReadVector3();
+                    var dim = reader.ReadVector3();
+                    sites.Add(new LtBombSiteInfo(area, pos, dim));
+                }
+
+                if (payload.Length > 512 && sites.All(IsZeroSite))
+                    return false;
+
+                decoded = new LtBombSitesDecoded(sites);
+                return true;
+            }
+
+            if (payload.Length < 3 + count * 10)
+            {
+                if (count == 1 && payload.Length >= 4)
+                {
+                    var area = reader.ReadUInt8();
+                    decoded = new LtBombSitesDecoded([new LtBombSiteInfo(area, new Vector3F(0, 0, 0), new Vector3F(0, 0, 0))]);
+                    return true;
+                }
+
+                return false;
+            }
+
+            return TryDecodeBombSitesCompact(reader, count, out decoded);
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
+    private static bool TryDecodeBombSitesCompact(LtBitstreamReader reader, int count, out LtBombSitesDecoded? decoded)
+    {
+        decoded = null;
+        try
+        {
             var sites = new List<LtBombSiteInfo>(count);
             for (var i = 0; i < count; i++)
             {
-                var area = reader.ReadUInt8();
-                var pos = reader.ReadVector3();
-                var dim = reader.ReadVector3();
-                sites.Add(new LtBombSiteInfo(area, pos, dim));
-            }
+                if (reader.RemainingBits < 40)
+                    return false;
 
-            if (payload.Length > 512 && sites.All(IsZeroSite))
-                return false;
+                var area = reader.ReadUInt8();
+                var posX = reader.ReadSingle();
+                var posY = reader.ReadSingle();
+                var posZ = reader.ReadSingle();
+                sites.Add(new LtBombSiteInfo(area, new Vector3F(posX, posY, posZ), new Vector3F(0, 0, 0)));
+            }
 
             decoded = new LtBombSitesDecoded(sites);
             return true;

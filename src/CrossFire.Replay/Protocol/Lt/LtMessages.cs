@@ -351,3 +351,29 @@ public sealed record LtScForceLeavePollStartDecoded(
     IReadOnlyList<LtScForceLeavePollStartEntryDecoded> Entries) : LtDecodedMessage(EMessageId.MsgScForceLeavePollStart);
 
 public sealed record LtMscNone4Decoded() : LtDecodedMessage(EMessageId.MsgMscNone4);
+
+public sealed record LtScNjAiFireStartDecoded(
+    byte FieldA,
+    byte FieldB,
+    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScNjAiFireStart);
+
+public sealed record LtScPlayerLevelUpDecoded(
+    ushort LevelOrValue,
+    byte CharacterIndex,
+    ushort Amount,
+    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScPlayerLevelUp);
+
+public sealed record LtScDamageSiteEntryDecoded(
+    uint FieldA,
+    uint FieldB,
+    uint FieldC,
+    uint FieldD);
+
+public sealed record LtScDamageSiteDecoded(
+    uint Header,
+    IReadOnlyList<LtScDamageSiteEntryDecoded> Entries,
+    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScDamageSite);
+
+public sealed record LtScStageLightNodeClearDecoded(
+    byte NodeIndex,
+    bool HasTrailingData) : LtDecodedMessage(EMessageId.MsgScStageLightNodeClear);

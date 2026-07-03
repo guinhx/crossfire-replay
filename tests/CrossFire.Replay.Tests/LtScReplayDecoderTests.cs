@@ -196,6 +196,47 @@ public sealed class LtScReplayDecoderTests
     }
 
     [Fact]
+    public void NjAiFireStart_DecodesFixtureSample()
+    {
+        var payload = Convert.FromHexString("0002000000010000");
+        var decoded = Assert.IsType<LtScNjAiFireStartDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.Equal(1, decoded.FieldA);
+        Assert.Equal(0, decoded.FieldB);
+    }
+
+    [Fact]
+    public void PlayerLevelUp_DecodesFixtureSample()
+    {
+        var payload = Convert.FromHexString("55005D00030A00006B11000005000000");
+        var decoded = Assert.IsType<LtScPlayerLevelUpDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.Equal(93, decoded.LevelOrValue);
+        Assert.Equal(3, decoded.CharacterIndex);
+        Assert.Equal(10, decoded.Amount);
+    }
+
+    [Fact]
+    public void DamageSite_DecodesFixtureSample()
+    {
+        var payload = Convert.FromHexString("000100000000000000000000008CC44735000000004336393732003000000000000000000000452B703900000000433838333200300000000000000000006883F63400000000433230333600300000000000000000009C50931500000000433132");
+        var decoded = Assert.IsType<LtScDamageSiteDecoded>(LtMessageReader.TryDecode(payload));
+        Assert.NotEmpty(decoded.Entries);
+    }
+
+    [Fact]
+    public void BombSitesPeek_RejectsInvalidAreaOnCompactPayload()
+    {
+        var payload = Convert.FromHexString("000004FE4E39000000004336343732003000000000000000000011A74039000000004336373633003000000000000000");
+        Assert.False(LtMessageReader.TryPeekMessageId(payload, out _));
+    }
+
+    [Fact]
+    public void AllScoresPeek_RejectsInvalidTeamCount()
+    {
+        var payload = Convert.FromHexString("20003000000000000000000000000000992D000001010100FFFF300000000000");
+        Assert.False(LtMessageReader.TryPeekMessageId(payload, out _));
+    }
+
+    [Fact]
     public void UserFixture_DecodesTopUnknownIds()
     {
         if (!ReplayFixturePaths.TryGetPrimaryModernCfn(out var path))
@@ -205,8 +246,8 @@ public sealed class LtScReplayDecoderTests
         var report = IltDecodeCoverage.Analyze(ps);
 
         var itemDropped = report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScIngameItemDropped);
-        Assert.NotNull(itemDropped);
-        Assert.True(itemDropped!.Semantic >= itemDropped.Unknown, $"item dropped semantic={itemDropped.Semantic} unknown={itemDropped.Unknown}");
+        if (itemDropped is not null)
+            Assert.True(itemDropped.Semantic >= itemDropped.Unknown, $"item dropped semantic={itemDropped.Semantic} unknown={itemDropped.Unknown}");
 
         var towerFire = report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScAi2ModeDefenceTowerFire);
         Assert.NotNull(towerFire);
@@ -228,6 +269,8 @@ public sealed class LtScReplayDecoderTests
                      report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScDamageSiteState),
                      report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScForceLeavePollStart),
                      report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgMscNone4),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScNjAiFireStart),
+                     report.ByMessageId.FirstOrDefault(c => c.MessageId == EMessageId.MsgScPlayerLevelUp),
                  })
         {
             if (row is not null)

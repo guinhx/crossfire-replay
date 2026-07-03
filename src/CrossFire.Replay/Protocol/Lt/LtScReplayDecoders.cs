@@ -206,6 +206,105 @@ internal static class LtScReplayDecoders
         }
     }
 
+    public static LtDecodedMessage? TryDecodeNjAiFireStart(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 6)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScNjAiFireStart)
+                return null;
+
+            if (payload.Length <= 8)
+                return new LtScNjAiFireStartDecoded(payload[5], payload[3], payload.Length > 8);
+
+            var fieldA = reader.ReadUInt32();
+            var fieldB = reader.IsEmpty ? (ushort)0 : reader.ReadUInt16();
+            return new LtScNjAiFireStartDecoded((byte)fieldA, (byte)fieldB, reader.HasRemaining);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    public static LtDecodedMessage? TryDecodePlayerLevelUp(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 7)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScPlayerLevelUp)
+                return null;
+
+            var levelOrValue = reader.ReadUInt16();
+            var characterIndex = reader.ReadUInt8();
+            var amount = reader.ReadUInt16();
+            return new LtScPlayerLevelUpDecoded(levelOrValue, characterIndex, amount, reader.HasRemaining);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    public static LtDecodedMessage? TryDecodeStageLightNodeClear(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 3)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScStageLightNodeClear)
+                return null;
+
+            var nodeIndex = reader.ReadUInt8();
+            return new LtScStageLightNodeClearDecoded(nodeIndex, reader.HasRemaining);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    public static LtDecodedMessage? TryDecodeDamageSite(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 4)
+            return null;
+
+        try
+        {
+            var reader = new LtBitstreamReader(payload);
+            if ((EMessageId)reader.ReadMessageId() != EMessageId.MsgScDamageSite)
+                return null;
+
+            if (payload.Length <= 8)
+                return new LtScDamageSiteDecoded(0, Array.Empty<LtScDamageSiteEntryDecoded>(), reader.HasRemaining);
+
+            var header = reader.ReadUInt32();
+            var entries = new List<LtScDamageSiteEntryDecoded>();
+            while (reader.RemainingBits >= 128)
+            {
+                entries.Add(new LtScDamageSiteEntryDecoded(
+                    reader.ReadUInt32(),
+                    reader.ReadUInt32(),
+                    reader.ReadUInt32(),
+                    reader.ReadUInt32()));
+            }
+
+            return new LtScDamageSiteDecoded(header, entries, reader.HasRemaining);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
     public static LtDecodedMessage? TryDecodeForceLeavePollStart(ReadOnlySpan<byte> payload)
     {
         if (payload.Length < ForceLeavePollStartMinEntryBytes)
