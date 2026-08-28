@@ -25,7 +25,7 @@ public static class SimpleProtocolReader
     }
 
     public static CfrDocument ReadPayload(ReadOnlySpan<byte> payload, string? sourcePath = null) =>
-        ReadPayload(payload, SimpleProtocolReadOptions.Strict, sourcePath);
+        ReadPayload(payload, SimpleProtocolReadOptions.Lenient, sourcePath);
 
     public static CfrDocument ReadPayload(
         ReadOnlySpan<byte> payload,
@@ -58,7 +58,7 @@ public static class SimpleProtocolReader
     }
 
     public static CfrDocument Read(Stream stream, string? sourcePath = null) =>
-        Read(stream, sourcePath, SimpleProtocolReadOptions.Strict);
+        Read(stream, sourcePath, SimpleProtocolReadOptions.Lenient);
 
     public static CfrDocument Read(Stream stream, string? sourcePath, SimpleProtocolReadOptions options)
     {
