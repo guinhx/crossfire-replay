@@ -1,61 +1,83 @@
-# CFR — SimpleProtocol
+# CFR SimpleProtocol
 
-Arquivo texto-binário iniciando com `cfrversion` seguido de flags de feature e mensagens sequenciais.
+The project uses **SimpleProtocol** for the text-prefixed binary stream found in observed CFR files.
 
 ## Header
 
+```text
+ASCII "cfrversion" + four decimal version digits   // 14 bytes total
+
+if fileVersion >= 32:
+    i32 featureFlagCount
+    repeat featureFlagCount:
+        i32 nameLength
+        byte[nameLength] name                       // interpreted as ASCII
 ```
-"cfrversion" (10 bytes ASCII)
-u32 fileVersion
-u32 featureFlagCount
-repeat featureFlagCount:
-    u32 nameLen
-    bytes name (ASCII)
-```
 
-Feature flags controlam campos opcionais em mensagens (ex.: clan refine, versões de protocolo).
+For example, file version 32 starts with `cfrversion0032`. The feature-flag table is absent from earlier file versions. Flags select optional fields in some message layouts.
 
-## Mensagens
+## Messages
 
-Cada mensagem:
+Messages are stored sequentially without a general message-length field:
 
-```
-u8  messageId   (SimpleProtocolId)
-u8  protocolVersion (se fileVersion >= 5)
+```text
+u8 messageId
+[u8 protocolVersion]   // present for the supported handlers when fileVersion >= 5
 u32 timestamp
-... body (depende do id)
+... message-specific body
 ```
 
-Alguns arquivos têm **checksum MD5** de 16 bytes prefixando o bloco acima (`CfrReader` valida quando presente).
+The exact body and, for exceptional handlers, header handling are determined by `messageId`, the file version, the message protocol version, and feature flags. Because there is no universal length field, a parser generally cannot recover the next boundary after an unknown body layout.
 
-## API
+## Checksum prefix
+
+Some CFR files place a 32-byte checksum block before `cfrversion`. This block is not a raw 16-byte MD5 digest. `ReplayChecksum.ComputeBlock`:
+
+1. Computes the body's MD5 digest.
+2. Converts it to 32 uppercase hexadecimal ASCII characters.
+3. Formats the decimal body length to a minimum width of four digits, then adds one of its first four characters, repeated across the block, to each ASCII byte.
+
+`SimpleProtocolReader` detects the prefix by finding `cfrversion` at offset `0x20` and records validation in `CfrDocument.ChecksumValid`. A malformed prefix does not prevent parsing when the body layout remains readable; inspect `ChecksumValid` explicitly when integrity matters.
+
+## Reading
 
 ```csharp
-var doc = CfrReader.ReadFile("match.cfr");
-// ou após extrair container:
-var doc2 = SimpleProtocolReader.ReadPayload(payloadBytes);
+using CrossFire.Replay;
+using CrossFire.Replay.Formats.SimpleProtocol;
+
+var document = CfrReader.ReadFile("match.cfr");
+Console.WriteLine($"messages={document.Messages.Count}");
+
+var payloadBytes = await File.ReadAllBytesAsync("match.cfr");
+var sameDocument = SimpleProtocolReader.ReadPayload(payloadBytes, "match.cfr");
 ```
 
-Mensagens tipadas: `MapInfoMessage`, `RoundStartMessage`, `PlayerDieMessage`, etc.  
-Fallback: `GenericReplayMessage` com `Fields` dictionary.
+Typed messages include `MapInfoMessage`, `RoundStartMessage`, and `PlayerDieMessage`. Several supported IDs use `GenericReplayMessage` with a `Fields` dictionary instead of a dedicated type. Unsupported message handling depends on `SimpleProtocolReadOptions`.
 
-## Escrita
+## Writing
 
 ```csharp
-CfrWriter.WriteFile("out.cfr", doc);
-CfrWriter.WriteFile("out.cfr", doc, prependChecksum: true);
+using CrossFire.Replay;
+
+var document = CfrReader.ReadFile("match.cfr");
+CfrWriter.WriteFile("plain.cfr", document);
+CfrWriter.WriteFile("checksummed.cfr", document, prependChecksum: true);
 ```
 
-## Relação com `.cfn`
+When parsed messages retain their original `Payload` bytes, the writer reuses those bytes. Model-based serialization is available for implemented message types. Round-trip tests validate the asserted bytes and fields; they do not prove complete semantic interpretation or game-client acceptance.
 
-Um `.cfn` descomprimido **pode** conter inner legacy que embute CFR-like data, mas o fluxo principal moderno é PacketSimulator puro. Use `ReplayService.Default.Read` para auto-detectar.
+## Wrapped payloads
 
-## Implementação
+`ReplayService.Default.Read` can detect a SimpleProtocol payload after decoding a `.cfo` or `.cfn` wrapper. PacketSimulator is a separate payload family; the reader does not treat a PacketSimulator layout as embedded CFR data.
 
-| Área | Caminho |
-|------|---------|
-| IDs | `Protocol/SimpleProtocolId.cs` |
-| Deserializer | `Protocol/ProtocolDeserializer*.cs` |
-| Reader/Writer | `Formats/SimpleProtocol/` |
+## Implementation
 
-Handlers são adicionados manualmente em `ProtocolDeserializer.Handlers.cs`.
+| Area | Repository-relative path |
+|---|---|
+| IDs | `src/CrossFire.Replay/Protocol/SimpleProtocolId.cs` |
+| Deserialization | `src/CrossFire.Replay/Protocol/ProtocolDeserializer.cs` and `src/CrossFire.Replay/Protocol/ProtocolDeserializer.Handlers.cs` |
+| Serialization | `src/CrossFire.Replay/Protocol/ProtocolSerializer.cs` |
+| Reader and writer | `src/CrossFire.Replay/Formats/SimpleProtocol/` |
+| Checksum | `src/CrossFire.Replay/Compression/ReplayChecksum.cs` |
+
+Handlers are registered in `src/CrossFire.Replay/Protocol/ProtocolDeserializer.Handlers.cs`.

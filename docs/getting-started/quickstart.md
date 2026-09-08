@@ -1,141 +1,149 @@
 # Quickstart
 
-## Pré-requisitos
+## Prerequisites
 
 - .NET 8 SDK
-- (Opcional) Replays reais em `%USERPROFILE%\Documents\Cross Fire\Replay\` para testes de integração locais
+- Optional local replay files for fixture-backed tests; see [fixtures.md](fixtures.md)
 
-## Build e testes
+## Build and test
 
-```bash
+Run these commands from the repository root:
+
+```powershell
 dotnet restore CrossFire.Replay.sln
 dotnet build CrossFire.Replay.sln -c Release
 dotnet test CrossFire.Replay.sln -c Release
 ```
 
-Testes de integração usam fixtures locais — configure `CROSSFIRE_REPLAY_FIXTURE_CFN` ou veja [fixtures.md](fixtures.md). Testes sintéticos rodam sem arquivos externos.
+Synthetic tests run without external files. Some integration tests use local `.cfn` fixtures configured through `CROSSFIRE_REPLAY_FIXTURE_CFN` or `CROSSFIRE_REPLAY_FIXTURE_FOLDER`.
 
 ## CLI
 
-Projeto: `samples/CrossFire.Replay.Cli`
+The CLI project is `samples/CrossFire.Replay.Cli`. Invoke it from the repository root as follows:
 
-| Comando | Efeito |
-|---------|--------|
-| `read replay.cfn` | Resumo do documento parseado |
-| `read replay.cfn --dump` | Amostra de mensagens / pacotes |
-| `inspect replay.cfn` | Metadados de container + structs de layout |
-| `inspect replay.cfn --hex` | Idem + preview hex |
-| `coverage replay.cfn` | Relatório de cobertura ILT semântica |
-| `export-timeline replay.cfn out.json` | Export JSON da timeline ILT (schema v1) |
-| `export-timeline replay.cfn out.csv` | Export CSV |
-| `self-test` | Round-trip CFR + containers CFO/CFN |
-
-Sintaxe legada ainda aceita: `replay.cfn --inspect`, `replay.cfn --export-timeline out.json`.
-
-### Exemplo de saída (`.cfn` moderno)
-
-```
-Format: PacketSimulator
-Inner format: ModernV2026
-Unified timeline: 12450 packets
-Deduplicated timeline: 11800 packets
-Binary snapshots: 12
+```powershell
+dotnet run --project samples/CrossFire.Replay.Cli -- read replay.cfn
 ```
 
-## Uso em código
+| Arguments after `--` | Effect |
+|---|---|
+| `read replay.cfn` | Print a parsed document summary |
+| `read replay.cfn --dump` | Include a sample of messages or packets |
+| `inspect replay.cfn` | Inspect the container and detected inner layout |
+| `inspect replay.cfn --hex` | Also print a short hexadecimal file-header preview |
+| `coverage replay.cfn` | Report ILT semantic decode coverage |
+| `coverage replay.cfn --top 40` | List up to 40 unknown message IDs |
+| `export-timeline replay.cfn timeline.json` | Export the ILT timeline as JSON |
+| `export-timeline replay.cfn timeline.csv` | Export the ILT timeline as CSV |
+| `self-test` | Run built-in CFR and container round-trip checks |
 
-### Ler qualquer replay suportado
+The argument normalizer also accepts legacy forms such as `replay.cfn --inspect`, `replay.cfn --export-timeline timeline.json`, and `--self-test`. Prefer the subcommands above.
+
+`ModernV2026` and `LegacyV2022` in CLI output are names assigned by this project to distinguish observed layouts. They are not official protocol version names.
+
+## Read a replay
+
+The following self-contained example reads a path supplied on the command line, then handles either supported document type:
+
+```csharp
+using CrossFire.Replay;
+using CrossFire.Replay.Core;
+using CrossFire.Replay.Formats.PacketSimulator;
+using CrossFire.Replay.Formats.SimpleProtocol;
+
+if (args.Length != 1)
+    throw new ArgumentException("Pass one replay path.");
+
+var path = args[0];
+var service = ReplayService.Default;
+var document = service.Read(path);
+
+switch (document)
+{
+    case CfrDocument cfr:
+        foreach (var message in cfr.Messages.Take(20))
+            Console.WriteLine($"{message.Timestamp} {message.MessageId}");
+        break;
+
+    case PacketSimulatorReplayDocument packetSimulator:
+        foreach (var packet in packetSimulator.UnifiedTimeline.Take(20))
+            Console.WriteLine($"{packet.Timestamp} {packet.MessageId}");
+        break;
+}
+```
+
+To read bytes already in memory, use `service.Read(bytes, sourcePath)`. Supplying `sourcePath` is optional but improves diagnostics and file-kind reporting.
+
+## Inspect without parsing the document
 
 ```csharp
 using CrossFire.Replay.Core;
-using CrossFire.Replay;
 
-var service = ReplayService.Default;
+var path = args.Single();
+var inspection = ReplayService.Default.Inspect(path);
 
-// Por caminho
-var doc = service.Read(@"D:\Replays\CFReplay20260701_0000.cfn");
-
-// Por bytes
-var bytes = await File.ReadAllBytesAsync(path);
-var doc2 = service.Read(bytes, path);
+Console.WriteLine(inspection.ContainerKind);
+Console.WriteLine(inspection.PacketSimulatorInnerFormat);
 ```
 
-### Inspecionar container sem parse completo
+For a typical encrypted `.cfn`, `ContainerKind` is `EncryptedBrotliWrapper`; detection is based on bytes, not solely on the extension.
+
+## Decode and export PacketSimulator data
 
 ```csharp
-var info = ReplayService.Default.Inspect(path);
-Console.WriteLine(info.ContainerKind);           // EncryptedBrotliWrapper para .cfn
-Console.WriteLine(info.PacketSimulatorInnerFormat);
-```
-
-### CFR (SimpleProtocol)
-
-```csharp
-using CrossFire.Replay.Formats.SimpleProtocol;
-
-if (doc is CfrDocument cfr)
-{
-    foreach (var msg in cfr.Messages)
-        Console.WriteLine($"{msg.Timestamp} {msg.MessageId}");
-}
-```
-
-### CFN (PacketSimulator + ILT)
-
-```csharp
+using CrossFire.Replay.Core;
 using CrossFire.Replay.Formats.PacketSimulator;
 using CrossFire.Replay.Protocol.Lt;
 
-if (doc is PacketSimulatorReplayDocument ps)
+var path = args.Single();
+var document = ReplayService.Default.Read(path);
+
+if (document is not PacketSimulatorReplayDocument packetSimulator)
+    throw new InvalidOperationException("The replay is not a PacketSimulator document.");
+
+foreach (var packet in packetSimulator.ExpandedUnifiedTimeline.Take(20))
 {
-    foreach (var pkt in ps.UnifiedTimeline.Take(20))
-    {
-        if (pkt.Decoded is LtDamageDecoded dmg)
-            Console.WriteLine($"dmg={dmg.Damage} from={dmg.AttackerIndex}");
-    }
-
-    // Timeline com pacotes embutidos em binary snapshots
-    Console.WriteLine(ps.ExpandedUnifiedTimeline.Count);
+    if (packet.Decoded is LtDamageDecoded damage)
+        Console.WriteLine($"damage={damage.Damage} attacker={damage.AttackerIndex}");
 }
+
+PacketSimulatorTimelineExporter.WriteJson("timeline.json", packetSimulator);
+PacketSimulatorTimelineExporter.WriteCsv("timeline.csv", packetSimulator);
 ```
 
-### Exportar timeline
+`ExpandedUnifiedTimeline` includes ILT packets heuristically extracted from binary-snapshot bodies. Use `UnifiedTimeline` when those embedded packets should remain represented only by their parent snapshots.
+
+## Write replay data
 
 ```csharp
-PacketSimulatorTimelineExporter.WriteJson("timeline.json", ps);
-PacketSimulatorTimelineExporter.WriteCsv("timeline.csv", ps);
-```
-
-### Escrever CFR / containers
-
-```csharp
+using CrossFire.Replay;
 using CrossFire.Replay.Abstractions;
 using CrossFire.Replay.Core;
 
 var cfr = CfrReader.ReadFile("input.cfr");
 CfrWriter.WriteFile("copy.cfr", cfr, prependChecksum: true);
 
-var wrapped = ReplayWriteService.Default.Write(
-    cfr,
-    ReplayWriteOptions.CfnWrapper);
-await File.WriteAllBytesAsync("out.cfn", wrapped);
+var wrapped = ReplayWriteService.Default.Write(cfr, ReplayWriteOptions.CfnWrapper);
+await File.WriteAllBytesAsync("wrapped.cfn", wrapped);
 ```
 
-## Referenciar a biblioteca
+`ReplayWriteService` can write both `CfrDocument` and `PacketSimulatorReplayDocument` instances as an unwrapped payload or in `.cfo`/`.cfn` containers. The optional checksum prefix applies only to plain CFR output. Writer and round-trip tests establish parser/writer consistency and, for fixture-preserving paths, byte equality; they do not establish that newly synthesized files are accepted by a game client.
 
-Adicione referência ao projeto:
+## Reference the library
+
+Add a project reference from another project, adjusting the relative path as needed:
 
 ```xml
 <ProjectReference Include="..\src\CrossFire.Replay\CrossFire.Replay.csproj" />
 ```
 
-Ou empacote localmente:
+Or create a local package from the repository root:
 
-```bash
+```powershell
 dotnet pack src/CrossFire.Replay/CrossFire.Replay.csproj -c Release
 ```
 
-## Próximos passos
+## Next steps
 
-- [dotnet-api.md](dotnet-api.md) — referência de tipos
-- [../formats/overview.md](../formats/overview.md) — mapa de formatos
+- [.NET API reference](dotnet-api.md)
+- [Format overview](../formats/overview.md)

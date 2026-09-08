@@ -1,50 +1,66 @@
-# Fixtures de teste (replays locais)
+# Local replay fixtures
 
-Os testes de integração usam arquivos `.cfn` **reais** que **não** são commitados no repositório (privacidade + tamanho).
+Fixture-backed integration tests use local `.cfn` replay files. These files are not committed because they may be large and may contain private match data.
 
-## Comportamento padrão
+## Test behavior
 
-- Testes **sintéticos** (round-trip, decoders unitários) rodam sempre — 182+ testes sem arquivos externos.
-- Testes marcados `UserCfn_*` ou com `[MemberData]` de fixtures **retornam cedo** se nenhum replay estiver disponível — o CI passa, mas a cobertura real depende da sua máquina.
+- Synthetic unit and round-trip tests run without external replay files.
+- Many `[Fact]` methods named `UserCfn_*` return immediately when the primary fixture cannot be resolved. Test runners generally report these as passed, not skipped.
+- Fixture theories obtain cases from the resolved replay folder. If no files are found, no fixture cases are produced; the repository's configured xUnit v2 runner reports a theory with no data as a failure.
+- A successful test run without fixtures therefore does not imply that real replay parsing was exercised.
 
-## Configurar fixtures
+The repository does not guarantee a fixed test count; the count changes as tests and local fixture cases are added.
 
-### Um arquivo de referência
+## Configure one primary fixture
+
+In PowerShell:
 
 ```powershell
-set CROSSFIRE_REPLAY_FIXTURE_CFN=C:\Replays\CFReplay20260701_0000.cfn
+$env:CROSSFIRE_REPLAY_FIXTURE_CFN = 'C:\Replays\CFReplay20260701_0000.cfn'
 dotnet test CrossFire.Replay.sln
 ```
 
-### Pasta inteira de replays
+`CROSSFIRE_REPLAY_FIXTURE_CFN` must name an existing file. It is used by tests that request the primary modern fixture and also provides its parent folder when no fixture-folder variable is set.
+
+## Configure a fixture folder
 
 ```powershell
-set CROSSFIRE_REPLAY_FIXTURE_FOLDER=C:\Users\%USERNAME%\Documents\Cross Fire\Replay
+$env:CROSSFIRE_REPLAY_FIXTURE_FOLDER = Join-Path $env:USERPROFILE 'Documents\Cross Fire\Replay'
 dotnet test CrossFire.Replay.sln
 ```
 
-Sem variáveis, o runner tenta o caminho padrão do Windows:
+The folder resolver enumerates its top-level `*.cfn` files in case-insensitive path order. It does not recurse into subdirectories. Setting only the folder variable does not select a primary fixture for `[Fact]` tests. Conversely, a valid primary fixture supplies its parent directory to the theory resolver when `CROSSFIRE_REPLAY_FIXTURE_FOLDER` is not set.
 
-`%USERPROFILE%\Documents\Cross Fire\Replay\CFReplay20260701_0000.cfn`
+## Default primary fixture
 
-## O que validar localmente
+When `CROSSFIRE_REPLAY_FIXTURE_CFN` is unset or invalid, the primary resolver checks this exact path under the current user's Documents folder:
 
-Após configurar fixtures, estes testes passam de skip para execução real:
+```text
+Cross Fire\Replay\CFReplay20260701_0000.cfn
+```
 
-- Parse do layout moderno 2026
-- Round-trip do inner payload
-- Middle blob e binary snapshots
-- Export de timeline JSON/CSV
-- Decoders semânticos prioritários no replay real
+No general search of the Replay folder is performed for the primary fixture.
 
-## CI / orgs
+## What fixture tests cover
 
-Para pipelines que precisam de cobertura real:
+Depending on which fixtures are available, tests exercise areas such as:
 
-1. Armazene replays em storage privado (não no git)
-2. Injete `CROSSFIRE_REPLAY_FIXTURE_CFN` ou `CROSSFIRE_REPLAY_FIXTURE_FOLDER` no job
-3. Opcional: falhe o job se a variável estiver ausente (política da sua org — o repo não força isso)
+- detection and parsing of the project-classified `ModernV2026` inner layout;
+- byte-preserving reconstruction of inner payloads and archive components;
+- middle-blob parsing, coverage metrics, and binary-snapshot extraction;
+- JSON and CSV timeline export;
+- selected semantic ILT decoders.
 
-## Privacidade
+These tests establish only their explicit assertions. Byte-for-byte round trips show preservation of observed bytes, not that all fields are understood semantically or that generated files are accepted by a game client.
 
-Replays podem conter nicknames, IDs e metadados de partida. Não envie arquivos completos em issues públicas — use trechos hex do payload conforme o template **Decode / format gap**.
+## CI
+
+For a pipeline that requires fixture coverage:
+
+1. Store replay files in private artifact or secret-backed storage, not in Git.
+2. Set `CROSSFIRE_REPLAY_FIXTURE_CFN`, `CROSSFIRE_REPLAY_FIXTURE_FOLDER`, or both for the test process.
+3. Add an explicit pipeline precondition if missing fixtures must fail the job; the test suite does not consistently enforce their presence.
+
+## Privacy
+
+Replays may contain nicknames, identifiers, and match metadata. Do not attach complete replay files to public issues. Prefer a minimal hexadecimal payload excerpt and use the **Decode / format gap** issue template.

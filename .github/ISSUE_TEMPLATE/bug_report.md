@@ -1,52 +1,77 @@
 ---
 name: Bug report
-about: Parse error, crash, round-trip quebrado ou teste falhando
+about: Report a parse error, crash, broken round-trip, or failing test
 title: "[bug] "
 labels: bug
 assignees: ''
 ---
 
-## Descrição
+## Summary
 
-<!-- O que aconteceu vs o que você esperava -->
+<!-- Briefly describe the problem and its impact. -->
 
-## Reprodução
+## Steps to reproduce
 
-1. Comando ou código:
+1. Command or minimal code sample:
    ```bash
-   dotnet run --project samples/CrossFire.Replay.Cli -- "caminho\arquivo.cfn"
+   dotnet run --project samples/CrossFire.Replay.Cli -- read "path/to/replay.cfn"
    ```
 2. ...
 
-## Ambiente
+## Expected behavior
 
-- OS:
+<!-- What should have happened? -->
+
+## Actual behavior
+
+<!-- What happened instead? Include whether the issue is consistent or intermittent. -->
+
+## Environment
+
+- OS and version:
 - .NET SDK (`dotnet --version`):
-- Commit / versão do repo:
+- Repository commit or release:
 
-## Arquivo (metadados apenas)
+## Replay metadata
 
-- Extensão: `.cfr` / `.cfn` / `.cfo`
-- Tamanho em bytes:
-- **Não** cole o arquivo inteiro se for privado; hex dos primeiros 64 B é suficiente:
-  ```
-  paste aqui
-  ```
+- Format: `.cfr` / `.cfn` / `.cfo`
+- File size in bytes:
+- Game client/version and approximate replay date, if known:
 
-## Saída / erro
+Do not post a full replay unless you are comfortable sharing its contents. Replays and hex excerpts may contain player names, account or session identifiers, chat, file paths, or other private data. Redact sensitive values before posting; use `??` for redacted hex bytes, preserve offsets, and note what was redacted.
 
+First 64 bytes, if relevant and safe to share:
+
+```text
+0000: ...
 ```
-cole ReplayParseException, stack trace ou saída do CLI
+
+## Error output
+
+<!-- Paste the complete ReplayParseException, stack trace, or CLI output as text. Redact sensitive paths and replay data. -->
+
+```text
+...
 ```
 
-## `--inspect` (se aplicável)
+## Inspection output
 
+If applicable, run:
+
+```bash
+dotnet run --project samples/CrossFire.Replay.Cli -- inspect "path/to/replay.cfn" --hex
 ```
-cole saída de: Cli arquivo --inspect
+
+Paste the output below after applying the same redaction guidance.
+
+```text
+...
 ```
 
 ## Checklist
 
-- [ ] Rodei `dotnet test CrossFire.Replay.sln` na minha máquina
-- [ ] Confirmei que o arquivo abre no client do jogo (não corrompido)
-- [ ] Li [docs/developer-guide/contributing.md](../blob/main/docs/developer-guide/contributing.md)
+- [ ] I searched existing issues for the same problem.
+- [ ] I confirmed the replay opens in the game client, when possible.
+- [ ] I ran `dotnet test CrossFire.Replay.sln`, or explained above why I could not.
+- [ ] I removed or redacted private data from all attachments and excerpts.
+- [ ] I reviewed the [contributing guide](https://github.com/guinhx/crossfire-replay/blob/main/docs/developer-guide/contributing.md).

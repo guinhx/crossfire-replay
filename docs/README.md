@@ -1,38 +1,36 @@
-# Documentação
+# Documentation
 
-Índice da documentação do **CrossFire Replay Toolkit**.
+Documentation index for the **CrossFire Replay Toolkit**.
 
-## Começando
+## Getting Started
 
-| Documento | Descrição |
-|-----------|-----------|
-| [quickstart.md](getting-started/quickstart.md) | Build, testes, CLI, exemplos de API |
-| [dotnet-api.md](getting-started/dotnet-api.md) | Tipos principais, fluxo de leitura/escrita |
+| Document | Contents |
+|----------|----------|
+| [Quick start](getting-started/quickstart.md) | Build and test commands, CLI usage, and API examples |
+| [.NET API](getting-started/dotnet-api.md) | Main types and read/write workflows |
+| [Local fixtures](getting-started/fixtures.md) | Optional replay files for integration tests |
 
-## Formatos de arquivo
+## File Formats
 
-| Documento | Descrição |
-|-----------|-----------|
-| [overview.md](formats/overview.md) | `.cfr`, `.cfn`, `.cfo` e containers |
-| [cfr-simple-protocol.md](formats/cfr-simple-protocol.md) | Stream `cfrversion` + mensagens SimpleProtocol |
-| [cfn-packet-simulator.md](formats/cfn-packet-simulator.md) | Layout moderno/legacy, ILT, middle blob |
+| Document | Contents |
+|----------|----------|
+| [Format overview](formats/overview.md) | `.cfr`, `.cfn`, `.cfo`, and their containers |
+| [CFR SimpleProtocol](formats/cfr-simple-protocol.md) | The `cfrversion` stream and SimpleProtocol messages |
+| [CFN PacketSimulator](formats/cfn-packet-simulator.md) | Observed legacy and modern layouts, ILT data, and the middle blob |
+| [ILT codecs](protocol/ilt-native-codecs.md) | Codecs based on observed ILT bitstream layouts |
 
-## Desenvolvimento
+## Development
 
-| Documento | Descrição |
-|-----------|-----------|
-| [architecture.md](developer-guide/architecture.md) | Camadas, namespaces, extensão |
-| [reverse-engineering.md](developer-guide/reverse-engineering.md) | Como validamos layouts (ImHex, round-trip) |
-| [contributing.md](developer-guide/contributing.md) | PRs, issues, convenções |
-| [ilt-native-codecs.md](protocol/ilt-native-codecs.md) | Decoders ILT alinhados ao wire nativo |
-| [project-status.md](project-status.md) | Limitações, uso comercial, roadmap |
-| [fixtures.md](getting-started/fixtures.md) | Replays locais para testes de integração |
+| Document | Contents |
+|----------|----------|
+| [Architecture](developer-guide/architecture.md) | Components, namespaces, and extension points |
+| [Reverse-engineering method](developer-guide/reverse-engineering.md) | How format hypotheses are investigated and tested |
+| [Contributing](developer-guide/contributing.md) | Pull requests, issues, conventions, and privacy requirements |
+| [Project status](project-status.md) | Current scope, limitations, and evaluation guidance |
 
 ## Legal
 
 - [LICENSE](../LICENSE)
-- [CREDITS](../CREDITS.md)
+- [CREDITS.md](../CREDITS.md)
 
-## Estado do projeto
-
-Limitações, escopo, roadmap e orientação para uso comercial: [project-status.md](project-status.md). Para lacunas de decode, abra uma issue com o template **Decode / format gap**.
+This is an independent reverse-engineering and interoperability project. The documented layouts are observations implemented by this repository, not official CrossFire specifications. Review [project status](project-status.md) before relying on the toolkit, and use the **Decode / format gap** issue template for unsupported data.

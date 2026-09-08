@@ -10,17 +10,19 @@
     <Version>0.1.0</Version>
     <PackageId>CrossFire.Replay</PackageId>
     <Title>CrossFire Replay Toolkit</Title>
-    <Description>Read and write CrossFire replay files (.cfr, .cfn, .cfo) with ILT decode. Independent reverse-engineering research — not official Smilegate software.</Description>
+    <Description>Inspect, read, and write observed CrossFire replay layouts (.cfr, .cfn, .cfo), including partial semantic ILT decoding. Independent project; not official Smilegate software.</Description>
     <Authors>guinhx</Authors>
     <PackageProjectUrl>https://github.com/guinhx/crossfire-replay</PackageProjectUrl>
     <RepositoryUrl>https://github.com/guinhx/crossfire-replay</RepositoryUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+    <None Include="..\..\CREDITS.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="CrossFire.Replay.Tests" />

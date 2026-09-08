@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Documentação
-    url: https://github.com/YOUR_ORG/crossfire-replay/blob/main/docs/README.md
-    about: Índice de docs, quickstart e formatos
-  - name: Metodologia RE
-    url: https://github.com/YOUR_ORG/crossfire-replay/blob/main/docs/developer-guide/reverse-engineering.md
-    about: Como validamos layouts (ImHex, round-trip)
+  - name: Documentation
+    url: https://github.com/guinhx/crossfire-replay/blob/main/docs/README.md
+    about: Documentation index, quick start, and supported formats
+  - name: Reverse-engineering method
+    url: https://github.com/guinhx/crossfire-replay/blob/main/docs/developer-guide/reverse-engineering.md
+    about: How observed layouts are investigated and validated

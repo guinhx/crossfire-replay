@@ -1,33 +1,39 @@
-# Status do projeto e limitações conhecidas
+# Project Status and Known Limitations
 
-Este documento descreve honestamente o que o **CrossFire Replay Toolkit** oferece hoje e o que **não** está coberto — útil para equipes que avaliam uso comercial, APIs ou pipelines.
+This page describes the repository's current implementation and the checks required when evaluating it. It does not certify compatibility with any client release or use case.
 
-## O que está maduro
+## Current Scope
 
-| Área | Status |
-|------|--------|
-| Leitura/escrita `.cfr` SimpleProtocol | Estável para mensagens implementadas |
-| Container Brotli / AES (`.cfn` / `.cfo`) | Round-trip nos testes sintéticos |
-| PacketSimulator moderno (2026) | Layout, metadata, middle blob, timeline |
-| Round-trip byte-a-byte | Foco principal do projeto |
-| Testes unitários sintéticos | Rodam em CI sem fixtures externas |
-| Decoders ILT nativos (prioritários) | Ver [protocol/ilt-native-codecs.md](protocol/ilt-native-codecs.md) |
+| Area | Implemented behavior |
+|------|----------------------|
+| CFR SimpleProtocol | Reads and writes the message types implemented by `ProtocolDeserializer` and `ProtocolSerializer` |
+| CFN/CFO containers | Decodes and encodes the supported Brotli and encrypted Brotli wrappers |
+| PacketSimulator | Reads observed legacy and modern inner layouts and exposes metadata, packet sections, snapshots, and timelines where recognized |
+| ILT | Identifies plausible message IDs, semantically decodes supported messages, and preserves unsupported packet payloads where the surrounding format permits |
+| Timeline export | Writes JSON and CSV; JSON currently reports schema version `1` and the toolkit version |
+| Test suite | Runs synthetic unit and round-trip tests without external replay files; additional tests use optional local fixtures |
 
-## Limitações conhecidas
+The assembly version is exposed as `ReplayToolkitVersion.Current` and is currently pre-1.0. Public APIs and exported schemas may therefore change between releases.
 
-### 1. Cobertura ILT depende do replay
+## Evidence and Compatibility
 
-O catálogo de IDs (`EMessageIdCatalog`) cobre milhares de símbolos; **decoders semânticos** existem para dezenas de tipos prioritários (dano, posição, armas, round, score, modos especiais, etc.), alinhados ao wire nativo quando possível — ver [protocol/ilt-native-codecs.md](protocol/ilt-native-codecs.md).
+The file and message layouts in this project were inferred through independent reverse engineering. They are implementation hypotheses supported by the test cases and replay samples available to contributors, not official specifications from Smilegate or another rights holder.
 
-A taxa de decode **varia por replay**: no fixture de referência usado nos testes de integração, a cobertura semântica chega a **~100%** dos pacotes ILT; em outros mapas, modos ou builds, pacotes ainda viram `LtUnknownDecoded`.
+A byte-for-byte round-trip demonstrates preservation only for the exact data and code path tested. It does not establish semantic correctness, completeness, compatibility with other regions or client builds, or preservation of every replay variant.
 
-**Impacto:** consumo semântico amplo exige validar com replays reais da sua região e expandir decoders conforme necessário, ou consumir payloads brutos.
+Before adopting the library, evaluate it against a representative, privately held corpus from the relevant client builds, regions, maps, and game modes. Include malformed and unsupported inputs, and repeat the evaluation whenever the capture client or toolkit version changes.
 
-**Como medir hoje:**
+## ILT Decode Coverage
+
+`EMessageIdCatalog` recognizes more IDs than the semantic decoder supports. Recognized but unsupported messages may be represented by `LtUnknownDecoded`; payloads without a plausible ID may remain undecoded. Coverage is data-dependent and a result from one fixture must not be generalized to other replays.
+
+Measure a replay with the sample CLI:
 
 ```bash
 dotnet run --project samples/CrossFire.Replay.Cli -- coverage replay.cfn
 ```
+
+Or use the library API:
 
 ```csharp
 using CrossFire.Replay.Protocol.Lt;
@@ -36,60 +42,26 @@ var report = IltDecodeCoverage.Analyze(packetSimulatorDocument);
 Console.WriteLine($"{report.SemanticPacketRatio:P1} packets semantic");
 ```
 
-Abra issues com template **Decode / format gap** para IDs frequentes sem decoder.
+Treat `ReplayParseException`, `LtUnknownDecoded`, and undecoded payloads as expected outcomes for unverified data. Report reproducible unsupported layouts with the **Decode / format gap** issue template, following the privacy guidance in [Contributing](developer-guide/contributing.md).
 
-### 2. Formato não oficial
+## Fixture-Backed Tests
 
-O toolkit é resultado de engenharia reversa independente. **Não há afiliação com Smilegate** nem especificação oficial.
+Tests that require real `.cfn` files rely on replay files stored outside the repository. When no suitable file is found, many fixture-dependent test methods return without exercising their fixture assertions; this is not evidence that a local replay was tested.
 
-**Impacto:** patches do cliente, regiões ou builds diferentes podem alterar layouts silenciosamente. Não há garantia de compatibilidade retroativa com todas as versões.
+| Environment variable | Purpose |
+|----------------------|---------|
+| `CROSSFIRE_REPLAY_FIXTURE_CFN` | Path to one modern `.cfn` reference file |
+| `CROSSFIRE_REPLAY_FIXTURE_FOLDER` | Directory containing `*.cfn` files for parameterized tests |
 
-**Mitigação recomendada para produção:**
+Some tests also look for the specific default path documented in [Local fixtures](getting-started/fixtures.md). That convenience path is machine-specific and is not expected to exist for most contributors or CI systems.
 
-- Fixar versão do cliente usado na captura
-- Testar replays reais da sua região antes de deploy
-- Tratar `ReplayParseException` e `LtUnknownDecoded` como caminhos normais, não exceções raras
+## Deliberate Boundaries
 
-### 3. Escopo “formato primeiro”
+The repository currently provides a .NET library, a sample CLI, tests, and documentation. It does not provide:
 
-O projeto **não** é um produto SaaS nem um SDK enterprise completo. Fora de escopo atual:
+- A published NuGet package; the project can be packed locally with `dotnet pack src/CrossFire.Replay/CrossFire.Replay.csproj -c Release`.
+- A stable 1.0 API or a compatibility matrix covering client builds.
+- Operational features such as authentication, queues, rate limiting, monitoring, or service-level support.
+- A guarantee that every replay field or ILT message has a semantic interpretation.
 
-| Não incluído | Notas |
-|--------------|-------|
-| SLA / suporte comercial | Comunidade + issues no GitHub |
-| Observabilidade (métricas, tracing) | Responsabilidade da aplicação consumidora |
-| Versionamento estável de API pública | Pré-1.0: breaking changes possíveis |
-| Pacote NuGet publicado oficialmente | `dotnet pack` local disponível; feed público TBD |
-| Camada de produto | Auth, rate limit, filas, schema de export estável para terceiros |
-
-**Versionamento:** `ReplayToolkitVersion.Current` (semver pré-1.0). Export JSON da timeline inclui `schemaVersion` — incrementado apenas em mudanças breaking do JSON.
-
-### 4. Testes dependem de fixtures locais
-
-Testes de integração com `.cfn` reais **não rodam** se você não tiver replays na máquina. Eles fazem skip silencioso (não falham o build).
-
-**Variáveis de ambiente:**
-
-| Variável | Uso |
-|----------|-----|
-| `CROSSFIRE_REPLAY_FIXTURE_CFN` | Caminho para um `.cfn` moderno de referência |
-| `CROSSFIRE_REPLAY_FIXTURE_FOLDER` | Pasta com `*.cfn` para testes parametrizados |
-
-Detalhes: [getting-started/fixtures.md](getting-started/fixtures.md).
-
-## Roadmap sugerido (não comprometido)
-
-1. Expandir decoders ILT por frequência (`coverage` + issues da comunidade)
-2. Publicar NuGet alpha quando API estabilizar
-3. Congelar `schemaVersion` do export de timeline após feedback
-4. Adicionar matriz de compatibilidade por build de cliente (contribuições bem-vindas)
-
-## Para uso comercial
-
-Viável como **biblioteca fundacional** se a sua org:
-
-- Aceita manter decoders e validar contra replays próprios
-- Não exige garantia oficial de formato
-- Envolve engenharia para API/pipeline, observabilidade e contratos de export
-
-Não recomendado como **plug-and-play** sem equipe técnica por trás.
+Use the CLI `coverage` and `inspect` commands, round-trip tests on copies of representative files, and application-level failure handling to determine whether the current implementation meets your requirements. The project makes no claim of commercial suitability. Any distribution or product incorporating the software must follow the attribution and no-endorsement requirements in [LICENSE](../LICENSE) and [CREDITS.md](../CREDITS.md).
