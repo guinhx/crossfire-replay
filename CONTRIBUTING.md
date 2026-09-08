@@ -4,7 +4,7 @@ Contributions that improve format accuracy, decoder coverage, tests, and documen
 
 ## Development Setup
 
-Install the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0), clone the repository, and run:
+Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), clone the repository, and run:
 
 ```bash
 dotnet build CrossFire.Replay.sln
@@ -15,7 +15,7 @@ Tests that use real replay files require local fixtures and return without execu
 
 ## Change Requirements
 
-- Keep changes focused and follow the existing C# style. The projects target .NET 8 and enable nullable reference types.
+- Keep changes focused and follow the existing C# style. The projects target .NET 10 and enable nullable reference types.
 - Include a unit, round-trip, or fixture-based regression test for format and decoder changes.
 - Distinguish byte preservation from semantic correctness. A byte-identical inner-payload round trip does not prove that decoded fields are complete or that a game client accepts rewritten output.
 - Document the client region, build, map, or mode when compatibility depends on it.

@@ -12,7 +12,7 @@ Contributions that improve replay interoperability through reproducible, lawful 
 
 ## Code Conventions
 
-- Target C# and .NET 8 with nullable reference types enabled.
+- Target C# and .NET 10 with nullable reference types enabled.
 - Follow the naming and formatting already used in the edited file.
 - Use decoded records for ILT message models where that matches the existing code.
 - Comment only where a non-obvious algorithm, assumption, or observed layout needs explanation.

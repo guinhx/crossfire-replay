@@ -1,6 +1,6 @@
 # CrossFire Replay Toolkit
 
-CrossFire Replay Toolkit is a .NET 8 library for inspecting, reading, and writing observed CrossFire replay formats. It supports SimpleProtocol events and PacketSimulator recordings containing ILT/LithTech packet data.
+CrossFire Replay Toolkit is a .NET 10 library for inspecting, reading, and writing observed CrossFire replay formats. It supports SimpleProtocol events and PacketSimulator recordings containing ILT/LithTech packet data.
 
 This is an independent reverse-engineering and interoperability project. It is not affiliated with, sponsored by, or endorsed by Smilegate, a CrossFire publisher, or any other rights holder.
 
@@ -22,7 +22,7 @@ See [Project Status](docs/project-status.md) for detailed limitations.
 
 ## Requirements
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 ## Quick Start
 

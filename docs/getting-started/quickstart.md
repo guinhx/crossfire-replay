@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- .NET 8 SDK
+- .NET 10 SDK
 - Optional local replay files for fixture-backed tests; see [fixtures.md](fixtures.md)
 
 ## Build and test

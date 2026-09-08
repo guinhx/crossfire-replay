@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - Revised the public repository documentation to clarify observed format support, byte round-trip validation, semantic decoding limits, and client compatibility.
+- Upgraded the library, sample CLI, and test project from .NET 8 to .NET 10.
 
 ## [0.1.0] - 2026-07-02
 
